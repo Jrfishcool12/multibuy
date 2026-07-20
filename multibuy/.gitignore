@@ -1,0 +1,8 @@
+keys.txt
+solana_keys.txt
+config.yaml
+*.log
+__pycache__/
+*.pyc
+venv/
+.venv/

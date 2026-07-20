@@ -1,0 +1,11 @@
+# Put ONE private key per line (0x-prefixed, 64 hex chars).
+# Copy this file to keys.txt and fill it in. keys.txt is gitignored.
+#
+# Each line is one wallet you control. The order here maps to
+# amount_overrides indices in config.yaml (first key = index 0).
+#
+# Blank lines and lines starting with # are ignored.
+#
+# 0xYOUR_FIRST_PRIVATE_KEY_HERE
+# 0xYOUR_SECOND_PRIVATE_KEY_HERE
+# 0xYOUR_THIRD_PRIVATE_KEY_HERE

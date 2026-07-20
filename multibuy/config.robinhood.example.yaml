@@ -1,0 +1,31 @@
+# ---------------------------------------------------------------------------
+# multibuy config for ROBINHOOD CHAIN (chain ID 4663, an Arbitrum L2).
+# Copy to config.yaml and edit token_address + amounts.
+# Native gas token is ETH, same as Ethereum mainnet.
+# ---------------------------------------------------------------------------
+
+# Public RPC (rate-limited). For many wallets at once, use your own Alchemy
+# Robinhood Chain endpoint: https://robinhood-mainnet.g.alchemy.com/v2/<KEY>
+rpc_url: "https://rpc.mainnet.chain.robinhood.com"
+
+# The token you want to buy on Robinhood Chain.
+token_address: "0x0000000000000000000000000000000000000000"
+
+amount_eth: 0.02
+slippage_bps: 100
+gas_reserve_eth: 0.005
+deadline_seconds: 300
+fee_tiers: [500, 3000, 10000]
+max_gas_price_gwei: 50   # L2 gas is cheap; this ceiling is generous
+
+# --- Robinhood Chain contract addresses (Uniswap V3 deployment) ---
+weth_address: "0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73"        # canonical WETH
+swap_router_address: "0xcaf681a66d020601342297493863e78c959e5cb2"  # Uniswap SwapRouter02
+quoter_address: "0x33e885ed0ec9bf04ecfb19341582aadcb4c8a9e7"       # Uniswap QuoterV2
+
+# NOTE ON STOCK TOKENS: Robinhood Stock Tokens may be paired against USDG
+# (Robinhood's stablecoin, 0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168) rather
+# than WETH. This tool does a single-hop WETH->token swap; if the token has no
+# direct WETH pool, every wallet will safely report "no pool" and skip. If that
+# happens, the token needs ETH->USDG->token multi-hop routing or a USDG-funded
+# buy — tell me and I'll add it.

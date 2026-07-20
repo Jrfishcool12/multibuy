@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>multibuy dashboard</title>
+<style>
+  :root{
+    --bg:#0b0e14; --panel:#131822; --panel2:#0f141d; --line:#232b39;
+    --txt:#e6eaf2; --muted:#8b97ab; --accent:#4f8cff; --accent2:#3ad6a0;
+    --warn:#ffb454; --danger:#ff6b6b; --ok:#3ad6a0;
+    --radius:12px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,#0b0e14,#0a0d13);color:var(--txt);
+    font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  a{color:var(--accent);text-decoration:none}
+  .wrap{max-width:1100px;margin:0 auto;padding:24px 20px 80px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:flex;align-items:center;justify-content:center;font-weight:800;color:#04121a}
+  h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.2px}
+  h1 span{color:var(--muted);font-weight:500}
+  .status-pills{display:flex;gap:8px;flex-wrap:wrap}
+  .pill{background:var(--panel);border:1px solid var(--line);border-radius:999px;
+    padding:6px 12px;font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center}
+  .pill b{color:var(--txt);font-weight:600}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+  .dot.on{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+  .dot.off{background:var(--danger)}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px;margin-bottom:18px}
+  .panel h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);
+    margin:0 0 14px;font-weight:600}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+  label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+  input[type=text],input[type=number],select{width:100%;background:var(--panel2);border:1px solid var(--line);
+    color:var(--txt);border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit}
+  input:focus,select:focus{outline:none;border-color:var(--accent)}
+  select{appearance:none;cursor:pointer}
+  .row-btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  button{cursor:pointer;border:none;border-radius:9px;padding:10px 16px;font-size:13px;font-weight:600;
+    font-family:inherit;transition:.15s;display:inline-flex;align-items:center;gap:7px}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-primary:hover:not(:disabled){background:#6ba0ff}
+  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--txt)}
+  .btn-ghost:hover:not(:disabled){border-color:var(--accent)}
+  .btn-exec{background:linear-gradient(135deg,#ff7a45,#ff5b8a);color:#fff}
+  .btn-exec:hover:not(:disabled){filter:brightness(1.1)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;
+    letter-spacing:.05em;padding:8px 10px;border-bottom:1px solid var(--line)}
+  td{padding:9px 10px;border-bottom:1px solid var(--panel2)}
+  tr:hover td{background:rgba(255,255,255,.015)}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+  .addr{color:var(--txt)}
+  .amt-input{width:92px}
+  .tag{font-size:11px;padding:2px 8px;border-radius:999px;font-weight:600;display:inline-block}
+  .tag.buy{background:rgba(58,214,160,.14);color:var(--ok)}
+  .tag.skip{background:rgba(139,151,171,.14);color:var(--muted)}
+  .tag.sent{background:rgba(79,140,255,.16);color:var(--accent)}
+  .tag.confirmed{background:rgba(58,214,160,.16);color:var(--ok)}
+  .tag.reverted,.tag.fail{background:rgba(255,107,107,.16);color:var(--danger)}
+  .tag.pending{background:rgba(255,180,84,.16);color:var(--warn)}
+  .muted{color:var(--muted)}
+  .banner{border-radius:9px;padding:11px 14px;font-size:12.5px;margin-bottom:16px;display:flex;gap:10px}
+  .banner.warn{background:rgba(255,180,84,.08);border:1px solid rgba(255,180,84,.3);color:#ffd39b}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--panel);
+    border:1px solid var(--line);border-radius:10px;padding:12px 18px;font-size:13px;box-shadow:0 8px 30px rgba(0,0,0,.5);
+    opacity:0;pointer-events:none;transition:.2s;z-index:50}
+  .toast.show{opacity:1}
+  .toast.err{border-color:var(--danger);color:#ffb4b4}
+  .summary{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);
+    font-size:13px}
+  .summary b{color:var(--txt)}
+  .checkbox{width:16px;height:16px;accent-color:var(--accent)}
+  .hint{font-size:11px;color:var(--muted);margin-top:4px}
+  .hidden{display:none}
+  .tabs{display:flex;gap:6px;margin-bottom:18px;background:var(--panel);border:1px solid var(--line);
+    border-radius:10px;padding:5px}
+  .tab{background:transparent;color:var(--muted);flex:1;justify-content:center;border-radius:7px;padding:9px 14px}
+  .tab.active{background:var(--panel2);color:var(--txt);box-shadow:inset 0 0 0 1px var(--line)}
+  .tab:hover:not(.active){color:var(--txt)}
+  #execConfirm{background:var(--panel2);border:1px solid var(--warn);border-radius:9px;padding:14px;margin-top:14px}
+  #execConfirm input{margin-top:8px}
+  .spin{width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;
+    display:inline-block;animation:sp .7s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo">M</div>
+      <h1>multibuy <span>· distribute one buy across your wallets</span></h1>
+    </div>
+    <div class="status-pills">
+      <div class="pill"><span id="connDot" class="dot off"></span><span id="connText">disconnected</span></div>
+      <div class="pill">chain <b id="chainId">—</b></div>
+      <div class="pill">gas <b id="gasGwei">—</b> gwei</div>
+      <div class="pill">wallets <b id="walletCount">0</b></div>
+    </div>
+  </header>
+
+  <div class="banner warn">
+    <span>⚠️</span>
+    <span>These wallets must all be yours. Keys stay on this machine and never reach the
+    browser — signing happens server-side. Nothing is broadcast until you Execute and confirm.</span>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="tabBtnEvm" onclick="switchTab('evm')">EVM · Ethereum / Robinhood Chain</button>
+    <button class="tab" id="tabBtnSol" onclick="switchTab('solana')">Solana</button>
+  </div>
+
+  <!-- ============================ EVM TAB ============================ -->
+  <div id="tab-evm">
+  <!-- CONFIG -->
+  <div class="panel">
+    <h2>Configuration</h2>
+    <div class="grid">
+      <div>
+        <label>Network</label>
+        <select id="network" onchange="applyNetwork()">
+          <option value="robinhood" selected>Robinhood Chain (4663)</option>
+          <option value="ethereum">Ethereum mainnet (1)</option>
+          <option value="custom">Custom / advanced</option>
+        </select>
+      </div>
+      <div>
+        <label>RPC URL</label>
+        <input type="text" id="rpc_url" value="https://rpc.mainnet.chain.robinhood.com" spellcheck="false">
+      </div>
+      <div>
+        <label>Token address to buy</label>
+        <input type="text" id="token_address" placeholder="0x…" spellcheck="false">
+      </div>
+      <div>
+        <label>Keys file path (on this machine)</label>
+        <input type="text" id="keys_path" value="keys.txt" spellcheck="false">
+      </div>
+      <div>
+        <label>Default ETH per wallet</label>
+        <input type="number" id="amount_eth" value="0.02" step="0.001" min="0">
+      </div>
+      <div>
+        <label>Slippage (%)</label>
+        <input type="number" id="slippage_pct" value="1.0" step="0.1" min="0">
+      </div>
+      <div>
+        <label>Gas reserve (ETH kept per wallet)</label>
+        <input type="number" id="gas_reserve_eth" value="0.005" step="0.001" min="0">
+      </div>
+      <div>
+        <label>Max gas price (gwei ceiling)</label>
+        <input type="number" id="max_gas_price_gwei" value="50" step="1" min="1">
+      </div>
+    </div>
+    <details style="margin-top:6px">
+      <summary style="cursor:pointer;color:var(--muted);font-size:12px">Advanced: DEX contract addresses (auto-set by network)</summary>
+      <div class="grid" style="margin-top:12px">
+        <div><label>WETH (wrapped ETH)</label>
+          <input type="text" id="weth_address" class="mono" spellcheck="false"></div>
+        <div><label>Uniswap SwapRouter02</label>
+          <input type="text" id="swap_router_address" class="mono" spellcheck="false"></div>
+        <div><label>Uniswap QuoterV2</label>
+          <input type="text" id="quoter_address" class="mono" spellcheck="false"></div>
+      </div>
+    </details>
+    <div class="row-btns">
+      <button class="btn-primary" id="btnConnect" onclick="connect()">Connect & load wallets</button>
+      <button class="btn-ghost" id="btnRefresh" onclick="loadWallets()" disabled>Refresh balances</button>
+    </div>
+  </div>
+
+  <!-- WALLETS -->
+  <div class="panel hidden" id="walletsPanel">
+    <h2>Wallets — <span id="tokenLabel" class="muted">token</span></h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:34px"><input type="checkbox" class="checkbox" id="selAll" onchange="toggleAll(this)"></th>
+          <th>#</th>
+          <th>Address</th>
+          <th>ETH balance</th>
+          <th>Spend (ETH)</th>
+          <th>Est. tokens out</th>
+          <th>Min out</th>
+          <th>Fee</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="walletRows"></tbody>
+    </table>
+    <div class="summary">
+      <div><b id="sumReady">0</b> selected & ready</div>
+      <div>total spend <b id="sumEth">0</b> ETH <span class="muted">(+ gas)</span></div>
+    </div>
+    <div class="row-btns">
+      <button class="btn-ghost" id="btnQuote" onclick="quote()">Preview / quote (no funds moved)</button>
+      <button class="btn-exec" id="btnExecPrep" onclick="showConfirm()" disabled>Execute selected buys →</button>
+    </div>
+
+    <div id="execConfirm" class="hidden">
+      <div><b>Confirm live execution.</b> This will broadcast real transactions spending
+        <b id="confirmEth">0</b> ETH across <b id="confirmN">0</b> wallets to buy
+        <b id="confirmTok">the token</b>. Type <span class="mono">yes</span> to proceed.</div>
+      <input type="text" id="confirmInput" placeholder="type yes" spellcheck="false" autocomplete="off">
+      <div class="row-btns">
+        <button class="btn-exec" id="btnExecGo" onclick="execute()">Broadcast now</button>
+        <button class="btn-ghost" onclick="hideConfirm()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="panel hidden" id="resultsPanel">
+    <h2>Execution results</h2>
+    <table>
+      <thead><tr><th>#</th><th>Address</th><th>Transaction</th><th>Status</th></tr></thead>
+      <tbody id="resultRows"></tbody>
+    </table>
+  </div>
+  </div><!-- /tab-evm -->
+
+  <!-- ============================ SOLANA TAB ============================ -->
+  <div id="tab-solana" class="hidden">
+  <div class="panel">
+    <h2>Configuration — Solana (buys via Jupiter, spends SOL)</h2>
+    <div class="grid">
+      <div>
+        <label>Solana RPC URL</label>
+        <input type="text" id="s_rpc_url" value="https://api.mainnet-beta.solana.com" spellcheck="false">
+      </div>
+      <div>
+        <label>Token mint address to buy</label>
+        <input type="text" id="s_token_mint" placeholder="mint address…" spellcheck="false">
+      </div>
+      <div>
+        <label>Keys file path (on this machine)</label>
+        <input type="text" id="s_keys_path" value="solana_keys.txt" spellcheck="false">
+      </div>
+      <div>
+        <label>Default SOL per wallet</label>
+        <input type="number" id="s_amount_sol" value="0.05" step="0.001" min="0">
+      </div>
+      <div>
+        <label>Slippage (%)</label>
+        <input type="number" id="s_slippage_pct" value="1.0" step="0.1" min="0">
+      </div>
+      <div>
+        <label>SOL reserve (kept per wallet for fees)</label>
+        <input type="number" id="s_sol_reserve" value="0.01" step="0.001" min="0">
+      </div>
+    </div>
+    <details style="margin-top:6px">
+      <summary style="cursor:pointer;color:var(--muted);font-size:12px">Advanced: Jupiter API</summary>
+      <div class="grid" style="margin-top:12px">
+        <div><label>Jupiter base URL</label>
+          <input type="text" id="s_jupiter_base_url" value="https://lite-api.jup.ag/swap/v1" class="mono" spellcheck="false"></div>
+        <div><label>Jupiter API key (optional, for api.jup.ag)</label>
+          <input type="text" id="s_jupiter_api_key" placeholder="leave blank for free tier" class="mono" spellcheck="false"></div>
+      </div>
+    </details>
+    <div class="row-btns">
+      <button class="btn-primary" id="s_btnConnect" onclick="solConnect()">Connect & load wallets</button>
+      <button class="btn-ghost" id="s_btnRefresh" onclick="solLoadWallets()" disabled>Refresh balances</button>
+    </div>
+  </div>
+
+  <div class="panel hidden" id="s_walletsPanel">
+    <h2>Wallets — <span id="s_tokenLabel" class="muted">token</span></h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:34px"><input type="checkbox" class="checkbox" id="s_selAll" onchange="solToggleAll(this)"></th>
+          <th>#</th><th>Address</th><th>SOL balance</th><th>Spend (SOL)</th>
+          <th>Est. tokens out</th><th>Min out</th><th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="s_walletRows"></tbody>
+    </table>
+    <div class="summary">
+      <div><b id="s_sumReady">0</b> selected & ready</div>
+      <div>total spend <b id="s_sumSol">0</b> SOL <span class="muted">(+ fees)</span></div>
+    </div>
+    <div class="row-btns">
+      <button class="btn-ghost" id="s_btnQuote" onclick="solQuote()">Preview / quote (no funds moved)</button>
+      <button class="btn-exec" id="s_btnExecPrep" onclick="solShowConfirm()" disabled>Execute selected buys →</button>
+    </div>
+    <div id="s_execConfirm" class="hidden">
+      <div><b>Confirm live execution.</b> This will broadcast real Solana transactions spending
+        <b id="s_confirmSol">0</b> SOL across <b id="s_confirmN">0</b> wallets. Type
+        <span class="mono">yes</span> to proceed.</div>
+      <input type="text" id="s_confirmInput" placeholder="type yes" spellcheck="false" autocomplete="off">
+      <div class="row-btns">
+        <button class="btn-exec" id="s_btnExecGo" onclick="solExecute()">Broadcast now</button>
+        <button class="btn-ghost" onclick="solHideConfirm()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel hidden" id="s_resultsPanel">
+    <h2>Execution results</h2>
+    <table>
+      <thead><tr><th>#</th><th>Address</th><th>Transaction</th><th>Status</th></tr></thead>
+      <tbody id="s_resultRows"></tbody>
+    </table>
+  </div>
+  </div><!-- /tab-solana -->
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let CONNECTED=false, WALLETS=[], TOKEN=null, RESULTS=[], pollTimer=null;
+
+const $=id=>document.getElementById(id);
+function toast(msg,err=false){const t=$("toast");t.textContent=msg;t.className="toast show"+(err?" err":"");
+  clearTimeout(t._t);t._t=setTimeout(()=>t.className="toast",3200);}
+function shortAddr(a){return a.slice(0,6)+"…"+a.slice(-4);}
+
+// Uniswap V3 deployments per network. ETH is the gas token on both.
+const NETWORKS={
+  robinhood:{
+    rpc:"https://rpc.mainnet.chain.robinhood.com",
+    weth:"0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73",
+    router:"0xcaf681a66d020601342297493863e78c959e5cb2",
+    quoter:"0x33e885ed0ec9bf04ecfb19341582aadcb4c8a9e7",
+  },
+  ethereum:{
+    rpc:"https://eth.llamarpc.com",
+    weth:"0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+    router:"0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
+    quoter:"0x61fFE014bA17989E743c5F6cB21bF9697530B21e",
+  },
+};
+function applyNetwork(){
+  const n=$("network").value;
+  if(n==="custom"){return;}          // leave fields for manual editing
+  const p=NETWORKS[n];
+  $("rpc_url").value=p.rpc;
+  $("weth_address").value=p.weth;
+  $("swap_router_address").value=p.router;
+  $("quoter_address").value=p.quoter;
+}
+
+function cfgBody(){
+  return {
+    rpc_url:$("rpc_url").value, token_address:$("token_address").value,
+    keys_path:$("keys_path").value, amount_eth:parseFloat($("amount_eth").value),
+    slippage_bps:Math.round(parseFloat($("slippage_pct").value)*100),
+    gas_reserve_eth:parseFloat($("gas_reserve_eth").value),
+    max_gas_price_gwei:parseFloat($("max_gas_price_gwei").value),
+    weth_address:$("weth_address").value.trim(),
+    swap_router_address:$("swap_router_address").value.trim(),
+    quoter_address:$("quoter_address").value.trim(),
+  };
+}
+async function api(path,body){
+  const r=await fetch(path,{method:body?"POST":"GET",
+    headers:{"Content-Type":"application/json"},body:body?JSON.stringify(body):undefined});
+  const j=await r.json();
+  if(!j.ok) throw new Error(j.error||"request failed");
+  return j;
+}
+function setGas(g){
+  $("gasGwei").textContent=g.gas_gwei.toFixed(1);
+  $("gasGwei").style.color=g.over_ceiling?"var(--danger)":"var(--txt)";
+}
+
+async function connect(){
+  const btn=$("btnConnect");btn.disabled=true;btn.innerHTML='<span class="spin"></span>connecting';
+  try{
+    const j=await api("/api/connect",cfgBody());
+    CONNECTED=true;TOKEN=j.token;
+    $("connDot").className="dot on";$("connText").textContent="connected";
+    $("chainId").textContent=j.chain_id;$("walletCount").textContent=j.wallet_count;
+    setGas(j.gas);
+    $("tokenLabel").textContent=(j.token.symbol||"TOKEN")+"  "+shortAddr(j.token.address);
+    $("btnRefresh").disabled=false;
+    $("walletsPanel").classList.remove("hidden");
+    await loadWallets();
+    toast("Connected — "+j.wallet_count+" wallet(s) loaded");
+  }catch(e){toast(e.message,true);$("connDot").className="dot off";$("connText").textContent="disconnected";}
+  btn.disabled=false;btn.textContent="Connect & load wallets";
+}
+
+async function loadWallets(){
+  try{
+    const j=await api("/api/wallets");
+    WALLETS=j.wallets;setGas(j.gas);renderWallets();
+  }catch(e){toast(e.message,true);}
+}
+
+function renderWallets(){
+  const tb=$("walletRows");tb.innerHTML="";
+  WALLETS.forEach(w=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td><input type="checkbox" class="checkbox rowsel" data-i="${w.index}" onchange="recompute()"></td>
+      <td class="muted">${w.index}</td>
+      <td class="mono addr" title="${w.address}">${shortAddr(w.address)}</td>
+      <td class="mono">${w.eth.toFixed(5)}</td>
+      <td><input type="number" class="amt-input mono" data-i="${w.index}" value="${(+$("amount_eth").value).toFixed(3)}" step="0.001" min="0" onchange="recompute()"></td>
+      <td class="mono est" data-i="${w.index}">—</td>
+      <td class="mono min" data-i="${w.index}">—</td>
+      <td class="mono fee" data-i="${w.index}">—</td>
+      <td class="stat" data-i="${w.index}"><span class="tag skip">not quoted</span></td>`;
+    tb.appendChild(tr);
+  });
+  recompute();
+}
+
+function amounts(){
+  const m={};document.querySelectorAll(".amt-input:not(.s_amt)").forEach(el=>m[el.dataset.i]=parseFloat(el.value)||0);return m;
+}
+function selectedIdx(){
+  return [...document.querySelectorAll(".rowsel:checked")].map(el=>+el.dataset.i);
+}
+function toggleAll(cb){document.querySelectorAll(".rowsel").forEach(el=>el.checked=cb.checked);recompute();}
+
+function recompute(){
+  const sel=selectedIdx(),am=amounts();
+  let total=0;sel.forEach(i=>total+=am[i]||0);
+  $("sumReady").textContent=sel.length;
+  $("sumEth").textContent=total.toFixed(4);
+  $("btnExecPrep").disabled=sel.length===0;
+}
+
+async function quote(){
+  const btn=$("btnQuote");btn.disabled=true;btn.innerHTML='<span class="spin"></span>quoting';
+  try{
+    const j=await api("/api/quote",{amounts:amounts()});
+    setGas(j.gas);
+    j.rows.forEach(r=>{
+      const est=document.querySelector(`.est[data-i="${r.index}"]`);
+      const min=document.querySelector(`.min[data-i="${r.index}"]`);
+      const fee=document.querySelector(`.fee[data-i="${r.index}"]`);
+      const stat=document.querySelector(`.stat[data-i="${r.index}"]`);
+      if(r.skip_reason){
+        est.textContent="—";min.textContent="—";fee.textContent="—";
+        stat.innerHTML=`<span class="tag skip" title="${r.skip_reason}">skip</span>`;
+      }else{
+        est.textContent=fmt(r.expected_out);min.textContent=fmt(r.min_out);
+        fee.textContent=(r.fee_tier/10000).toFixed(2)+"%";
+        stat.innerHTML=`<span class="tag buy">ready</span>`;
+      }
+    });
+    toast("Quoted "+j.rows.length+" wallet(s)");
+  }catch(e){toast(e.message,true);}
+  btn.disabled=false;btn.textContent="Preview / quote (no funds moved)";
+}
+function fmt(n){return n>=1?n.toLocaleString(undefined,{maximumFractionDigits:4}):n.toPrecision(4);}
+
+function showConfirm(){
+  const sel=selectedIdx(),am=amounts();let total=0;sel.forEach(i=>total+=am[i]||0);
+  $("confirmEth").textContent=total.toFixed(4);
+  $("confirmN").textContent=sel.length;
+  $("confirmTok").textContent=(TOKEN&&TOKEN.symbol)||"the token";
+  $("execConfirm").classList.remove("hidden");
+  $("confirmInput").value="";$("confirmInput").focus();
+}
+function hideConfirm(){$("execConfirm").classList.add("hidden");}
+
+async function execute(){
+  if($("confirmInput").value.trim().toLowerCase()!=="yes"){toast("Type 'yes' to confirm",true);return;}
+  const sel=selectedIdx();if(!sel.length){toast("Nothing selected",true);return;}
+  const btn=$("btnExecGo");btn.disabled=true;btn.innerHTML='<span class="spin"></span>broadcasting';
+  try{
+    const j=await api("/api/execute",{selected:sel,amounts:amounts()});
+    RESULTS=j.results;hideConfirm();renderResults();startPolling();
+    const sent=RESULTS.filter(r=>r.ok).length;
+    toast(sent+" broadcast, "+(RESULTS.length-sent)+" failed");
+  }catch(e){toast(e.message,true);}
+  btn.disabled=false;btn.textContent="Broadcast now";
+}
+
+function renderResults(){
+  $("resultsPanel").classList.remove("hidden");
+  const tb=$("resultRows");tb.innerHTML="";
+  RESULTS.forEach(r=>{
+    const tr=document.createElement("tr");
+    let txcell="—",stat=`<span class="tag fail" title="${r.error||''}">failed</span>`;
+    if(r.ok&&r.tx_hash){
+      const h=r.tx_hash.startsWith("0x")?r.tx_hash:"0x"+r.tx_hash;
+      txcell=`<a class="mono" href="https://etherscan.io/tx/${h}" target="_blank">${h.slice(0,10)}…${h.slice(-8)}</a>`;
+      stat=`<span class="tag sent rc" data-h="${h}">sent</span>`;
+    }
+    tr.innerHTML=`<td class="muted">${r.index}</td>
+      <td class="mono">${shortAddr(r.address)}</td>
+      <td>${txcell}</td><td>${stat}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function startPolling(){
+  if(pollTimer)clearInterval(pollTimer);
+  const hashes=RESULTS.filter(r=>r.ok&&r.tx_hash).map(r=>r.tx_hash.startsWith("0x")?r.tx_hash:"0x"+r.tx_hash);
+  if(!hashes.length)return;
+  pollTimer=setInterval(async()=>{
+    try{
+      const j=await api("/api/receipts",{hashes});
+      let allDone=true;
+      hashes.forEach(h=>{
+        const st=j.receipts[h]||{status:"pending"};
+        const el=document.querySelector(`.rc[data-h="${h}"]`);
+        if(el){
+          if(st.status==="confirmed"){el.className="tag confirmed rc";el.textContent="confirmed · blk "+st.block;}
+          else if(st.status==="reverted"){el.className="tag reverted rc";el.textContent="reverted";}
+          else if(st.status==="unknown"){el.className="tag pending rc";el.textContent="unknown";}
+          else{el.className="tag pending rc";el.textContent="pending";allDone=false;}
+        }
+      });
+      if(allDone){clearInterval(pollTimer);pollTimer=null;}
+    }catch(e){}
+  },4000);
+}
+
+// ===========================================================================
+// TABS
+// ===========================================================================
+function switchTab(t){
+  const evm=t==="evm";
+  $("tab-evm").classList.toggle("hidden",!evm);
+  $("tab-solana").classList.toggle("hidden",evm);
+  $("tabBtnEvm").classList.toggle("active",evm);
+  $("tabBtnSol").classList.toggle("active",!evm);
+}
+
+// ===========================================================================
+// SOLANA TAB
+// ===========================================================================
+let S_WALLETS=[], S_TOKEN=null, S_RESULTS=[];
+
+function solCfgBody(){
+  return {
+    rpc_url:$("s_rpc_url").value, token_mint:$("s_token_mint").value,
+    keys_path:$("s_keys_path").value, amount_sol:parseFloat($("s_amount_sol").value),
+    slippage_bps:Math.round(parseFloat($("s_slippage_pct").value)*100),
+    sol_reserve:parseFloat($("s_sol_reserve").value),
+    jupiter_base_url:$("s_jupiter_base_url").value.trim(),
+    jupiter_api_key:$("s_jupiter_api_key").value.trim(),
+  };
+}
+
+async function solConnect(){
+  const btn=$("s_btnConnect");btn.disabled=true;btn.innerHTML='<span class="spin"></span>connecting';
+  try{
+    const j=await api("/api/sol/connect",solCfgBody());
+    S_TOKEN={mint:j.token_mint,decimals:j.decimals};
+    $("connDot").className="dot on";$("connText").textContent="connected · solana";
+    $("chainId").textContent="solana";$("walletCount").textContent=j.wallet_count;
+    $("gasGwei").textContent="—";
+    $("s_tokenLabel").textContent=shortAddr(j.token_mint)+"  ·  "+j.decimals+" decimals";
+    $("s_btnRefresh").disabled=false;
+    $("s_walletsPanel").classList.remove("hidden");
+    await solLoadWallets();
+    toast("Connected — "+j.wallet_count+" Solana wallet(s)");
+  }catch(e){toast(e.message,true);}
+  btn.disabled=false;btn.textContent="Connect & load wallets";
+}
+
+async function solLoadWallets(){
+  try{
+    const j=await api("/api/sol/wallets");
+    S_WALLETS=j.wallets;solRenderWallets();
+  }catch(e){toast(e.message,true);}
+}
+
+function solRenderWallets(){
+  const tb=$("s_walletRows");tb.innerHTML="";
+  S_WALLETS.forEach(w=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td><input type="checkbox" class="checkbox s_rowsel" data-i="${w.index}" onchange="solRecompute()"></td>
+      <td class="muted">${w.index}</td>
+      <td class="mono addr" title="${w.pubkey}">${shortAddr(w.pubkey)}</td>
+      <td class="mono">${w.sol.toFixed(5)}</td>
+      <td><input type="number" class="amt-input mono s_amt" data-i="${w.index}" value="${(+$("s_amount_sol").value).toFixed(3)}" step="0.001" min="0" onchange="solRecompute()"></td>
+      <td class="mono s_est" data-i="${w.index}">—</td>
+      <td class="mono s_min" data-i="${w.index}">—</td>
+      <td class="s_stat" data-i="${w.index}"><span class="tag skip">not quoted</span></td>`;
+    tb.appendChild(tr);
+  });
+  solRecompute();
+}
+
+function solAmounts(){
+  const m={};document.querySelectorAll(".s_amt").forEach(el=>m[el.dataset.i]=parseFloat(el.value)||0);return m;
+}
+function solSelectedIdx(){return [...document.querySelectorAll(".s_rowsel:checked")].map(el=>+el.dataset.i);}
+function solToggleAll(cb){document.querySelectorAll(".s_rowsel").forEach(el=>el.checked=cb.checked);solRecompute();}
+function solRecompute(){
+  const sel=solSelectedIdx(),am=solAmounts();let total=0;sel.forEach(i=>total+=am[i]||0);
+  $("s_sumReady").textContent=sel.length;$("s_sumSol").textContent=total.toFixed(4);
+  $("s_btnExecPrep").disabled=sel.length===0;
+}
+
+async function solQuote(){
+  const btn=$("s_btnQuote");btn.disabled=true;btn.innerHTML='<span class="spin"></span>quoting';
+  try{
+    const j=await api("/api/sol/quote",{amounts:solAmounts()});
+    j.rows.forEach(r=>{
+      const est=document.querySelector(`.s_est[data-i="${r.index}"]`);
+      const min=document.querySelector(`.s_min[data-i="${r.index}"]`);
+      const stat=document.querySelector(`.s_stat[data-i="${r.index}"]`);
+      if(r.skip_reason){
+        est.textContent="—";min.textContent="—";
+        stat.innerHTML=`<span class="tag skip" title="${r.skip_reason}">skip</span>`;
+      }else{
+        est.textContent=fmt(r.expected_out);min.textContent=fmt(r.min_out);
+        stat.innerHTML=`<span class="tag buy">ready</span>`;
+      }
+    });
+    toast("Quoted "+j.rows.length+" wallet(s) via Jupiter");
+  }catch(e){toast(e.message,true);}
+  btn.disabled=false;btn.textContent="Preview / quote (no funds moved)";
+}
+
+function solShowConfirm(){
+  const sel=solSelectedIdx(),am=solAmounts();let total=0;sel.forEach(i=>total+=am[i]||0);
+  $("s_confirmSol").textContent=total.toFixed(4);$("s_confirmN").textContent=sel.length;
+  $("s_execConfirm").classList.remove("hidden");
+  $("s_confirmInput").value="";$("s_confirmInput").focus();
+}
+function solHideConfirm(){$("s_execConfirm").classList.add("hidden");}
+
+async function solExecute(){
+  if($("s_confirmInput").value.trim().toLowerCase()!=="yes"){toast("Type 'yes' to confirm",true);return;}
+  const sel=solSelectedIdx();if(!sel.length){toast("Nothing selected",true);return;}
+  const btn=$("s_btnExecGo");btn.disabled=true;btn.innerHTML='<span class="spin"></span>broadcasting';
+  try{
+    const j=await api("/api/sol/execute",{selected:sel,amounts:solAmounts()});
+    S_RESULTS=j.results;solHideConfirm();solRenderResults();solStartPolling();
+    const sent=S_RESULTS.filter(r=>r.ok).length;
+    toast(sent+" broadcast, "+(S_RESULTS.length-sent)+" failed");
+  }catch(e){toast(e.message,true);}
+  btn.disabled=false;btn.textContent="Broadcast now";
+}
+
+function solRenderResults(){
+  $("s_resultsPanel").classList.remove("hidden");
+  const tb=$("s_resultRows");tb.innerHTML="";
+  S_RESULTS.forEach(r=>{
+    const tr=document.createElement("tr");
+    let txcell="—",stat=`<span class="tag fail" title="${r.error||''}">failed</span>`;
+    if(r.ok&&r.signature){
+      txcell=`<a class="mono" href="https://solscan.io/tx/${r.signature}" target="_blank">${r.signature.slice(0,10)}…${r.signature.slice(-8)}</a>`;
+      stat=`<span class="tag sent s_rc" data-sig="${r.signature}">sent</span>`;
+    }
+    tr.innerHTML=`<td class="muted">${r.index}</td>
+      <td class="mono">${shortAddr(r.pubkey)}</td>
+      <td>${txcell}</td><td>${stat}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+let solPollTimer=null;
+function solStartPolling(){
+  if(solPollTimer)clearInterval(solPollTimer);
+  const sigs=S_RESULTS.filter(r=>r.ok&&r.signature).map(r=>r.signature);
+  if(!sigs.length)return;
+  let ticks=0;
+  solPollTimer=setInterval(async()=>{
+    ticks++;
+    try{
+      const j=await api("/api/sol/status",{signatures:sigs});
+      let allDone=true;
+      sigs.forEach(s=>{
+        const st=j.statuses[s]||{status:"pending"};
+        const el=document.querySelector(`.s_rc[data-sig="${s}"]`);
+        if(!el)return;
+        if(st.status==="confirmed"){el.className="tag confirmed s_rc";el.textContent=(st.level||"confirmed")+(st.slot?" · slot "+st.slot:"");}
+        else if(st.status==="failed"){el.className="tag reverted s_rc";el.textContent="failed";}
+        else{el.className="tag pending s_rc";el.textContent="pending";allDone=false;}
+      });
+      // Stop after everything confirms/fails, or after ~2 min of polling.
+      if(allDone||ticks>40){clearInterval(solPollTimer);solPollTimer=null;}
+    }catch(e){}
+  },3000);
+}
+
+// Populate the Robinhood Chain addresses into the advanced fields on load.
+applyNetwork();
+
+// Keep default-amount edits reflected in the per-row inputs before quoting.
+$("amount_eth").addEventListener("change",()=>{
+  document.querySelectorAll(".amt-input:not(.s_amt)").forEach(el=>el.value=(+$("amount_eth").value).toFixed(3));
+  recompute();
+});
+$("s_amount_sol").addEventListener("change",()=>{
+  document.querySelectorAll(".s_amt").forEach(el=>el.value=(+$("s_amount_sol").value).toFixed(3));
+  solRecompute();
+});
+</script>
+</body>
+</html>

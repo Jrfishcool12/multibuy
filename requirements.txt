@@ -1,0 +1,10 @@
+# EVM (Ethereum / Robinhood Chain)
+web3>=6,<8
+PyYAML>=6
+Flask>=3
+
+# Solana (only needed for the Solana tab)
+solders>=0.21
+solana>=0.34
+base58>=2
+requests>=2
