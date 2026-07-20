@@ -1,0 +1,1734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>multibuy dashboard</title>
+<style>
+  :root{
+    --bg:#0b0e14; --panel:#131822; --panel2:#0f141d; --line:#232b39;
+    --txt:#e6eaf2; --muted:#8b97ab; --accent:#4f8cff; --accent2:#3ad6a0;
+    --warn:#ffb454; --danger:#ff6b6b; --ok:#3ad6a0;
+    --radius:12px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(180deg,#0b0e14,#0a0d13);color:var(--txt);
+    font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  a{color:var(--accent);text-decoration:none}
+  .wrap{max-width:1100px;margin:0 auto;padding:24px 20px 80px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:flex;align-items:center;justify-content:center;font-weight:800;color:#04121a}
+  h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.2px}
+  h1 span{color:var(--muted);font-weight:500}
+  .status-pills{display:flex;gap:8px;flex-wrap:wrap}
+  .pill{background:var(--panel);border:1px solid var(--line);border-radius:999px;
+    padding:6px 12px;font-size:12px;color:var(--muted);display:flex;gap:6px;align-items:center}
+  .pill b{color:var(--txt);font-weight:600}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+  .dot.on{background:var(--ok);box-shadow:0 0 8px var(--ok)}
+  .dot.off{background:var(--danger)}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px;margin-bottom:18px}
+  .panel h2{font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);
+    margin:0 0 14px;font-weight:600}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+  label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+  input[type=text],input[type=number],select{width:100%;background:var(--panel2);border:1px solid var(--line);
+    color:var(--txt);border-radius:8px;padding:9px 11px;font-size:13px;font-family:inherit}
+  input:focus,select:focus{outline:none;border-color:var(--accent)}
+  select{appearance:none;cursor:pointer}
+  .row-btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  button{cursor:pointer;border:none;border-radius:9px;padding:10px 16px;font-size:13px;font-weight:600;
+    font-family:inherit;transition:.15s;display:inline-flex;align-items:center;gap:7px}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-primary:hover:not(:disabled){background:#6ba0ff}
+  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--txt)}
+  .btn-ghost:hover:not(:disabled){border-color:var(--accent)}
+  .btn-exec{background:linear-gradient(135deg,#ff7a45,#ff5b8a);color:#fff}
+  .btn-exec:hover:not(:disabled){filter:brightness(1.1)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;
+    letter-spacing:.05em;padding:8px 10px;border-bottom:1px solid var(--line)}
+  td{padding:9px 10px;border-bottom:1px solid var(--panel2)}
+  tr:hover td{background:rgba(255,255,255,.015)}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+  .addr{color:var(--txt)}
+  .amt-input{width:92px}
+  .tag{font-size:11px;padding:2px 8px;border-radius:999px;font-weight:600;display:inline-block}
+  .tag.buy{background:rgba(58,214,160,.14);color:var(--ok)}
+  .tag.skip{background:rgba(139,151,171,.14);color:var(--muted)}
+  .tag.sent{background:rgba(79,140,255,.16);color:var(--accent)}
+  .tag.confirmed{background:rgba(58,214,160,.16);color:var(--ok)}
+  .tag.reverted,.tag.fail{background:rgba(255,107,107,.16);color:var(--danger)}
+  .tag.pending{background:rgba(255,180,84,.16);color:var(--warn)}
+  .muted{color:var(--muted)}
+  .banner{border-radius:9px;padding:11px 14px;font-size:12.5px;margin-bottom:16px;display:flex;gap:10px}
+  .banner.warn{background:rgba(255,180,84,.08);border:1px solid rgba(255,180,84,.3);color:#ffd39b}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--panel);
+    border:1px solid var(--line);border-radius:10px;padding:12px 18px;font-size:13px;box-shadow:0 8px 30px rgba(0,0,0,.5);
+    opacity:0;pointer-events:none;transition:.2s;z-index:50}
+  .toast.show{opacity:1}
+  .toast.err{border-color:var(--danger);color:#ffb4b4}
+  .errbanner{display:flex;align-items:flex-start;gap:12px;margin:0 0 14px;padding:12px 16px;
+    background:rgba(255,80,80,.08);border:1px solid var(--danger);border-radius:10px;
+    color:#ffb4b4;font-size:13px;line-height:1.45;white-space:pre-wrap;word-break:break-word}
+  .errbanner.hidden{display:none}
+  .errbanner-x{margin-left:auto;background:none;border:none;color:#ffb4b4;cursor:pointer;
+    font-size:15px;line-height:1;padding:2px 4px;flex:none}
+  .summary{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--line);
+    font-size:13px}
+  .summary b{color:var(--txt)}
+  .checkbox{width:16px;height:16px;accent-color:var(--accent)}
+  .hint{font-size:11px;color:var(--muted);margin-top:4px}
+  .hidden{display:none !important}
+  .tabs{display:flex;gap:6px;margin-bottom:18px;background:var(--panel);border:1px solid var(--line);
+    border-radius:10px;padding:5px}
+  .tab{background:transparent;color:var(--muted);flex:1;justify-content:center;border-radius:7px;padding:9px 14px}
+  .tab.active{background:var(--panel2);color:var(--txt);box-shadow:inset 0 0 0 1px var(--line)}
+  .tab:hover:not(.active){color:var(--txt)}
+  .modebar{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap}
+  .seg{display:inline-flex;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:3px}
+  .seg-btn{background:transparent;color:var(--muted);border-radius:6px;padding:6px 18px;font-size:13px}
+  .seg-btn.active{background:var(--accent);color:#fff}
+  #evmSellBtn.active,#solSellBtn.active{background:var(--warn);color:#1a1200}
+  .pctctl{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+  .pctinput{width:64px;background:var(--panel2);border:1px solid var(--line);color:var(--txt);
+    border-radius:7px;padding:6px 8px;font-size:13px}
+  .chip{background:var(--panel2);border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:5px 9px;font-size:11px}
+  .chip:hover{color:var(--txt);border-color:var(--accent)}
+  .pricebar{display:flex;gap:26px;align-items:center;background:var(--panel2);border:1px solid var(--line);
+    border-radius:10px;padding:11px 16px;margin-bottom:14px;flex-wrap:wrap}
+  .pricebar>div{display:flex;flex-direction:column;gap:2px}
+  .pb-label{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .pb-val{font-size:15px;font-weight:600;color:var(--txt);font-family:ui-monospace,Menlo,monospace}
+  .safetybar{display:flex;align-items:center;gap:12px;background:rgba(255,107,107,.06);
+    border:1px solid rgba(255,107,107,.25);border-radius:10px;padding:9px 14px;margin-bottom:12px;flex-wrap:wrap}
+  #execConfirm{background:var(--panel2);border:1px solid var(--warn);border-radius:9px;padding:14px;margin-top:14px}
+  #execConfirm input{margin-top:8px}
+  .spin{width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;
+    display:inline-block;animation:sp .7s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="logo">M</div>
+      <h1>multibuy <span>· distribute one buy across your wallets</span></h1>
+    </div>
+    <div class="status-pills">
+      <div class="pill"><span id="connDot" class="dot off"></span><span id="connText">disconnected</span></div>
+      <div class="pill">chain <b id="chainId">—</b></div>
+      <div class="pill">gas <b id="gasGwei">—</b> gwei</div>
+      <div class="pill">wallets <b id="walletCount">0</b></div>
+    </div>
+  </header>
+
+  <div id="errBanner" class="errbanner hidden">
+    <span id="errBannerMsg"></span>
+    <button type="button" class="errbanner-x" onclick="clearErr()">✕</button>
+  </div>
+
+  <div class="banner warn">
+    <span>⚠️</span>
+    <span>These wallets must all be yours. Keys stay on this machine and never reach the
+    browser — signing happens server-side. Nothing is broadcast until you Execute and confirm.</span>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="tabBtnEvm" onclick="switchTab('evm')">EVM · Ethereum / Robinhood Chain</button>
+    <button class="tab" id="tabBtnSol" onclick="switchTab('solana')">Solana</button>
+  </div>
+
+  <!-- ============================ EVM TAB ============================ -->
+  <div id="tab-evm">
+  <!-- CONFIG -->
+  <div class="panel">
+    <h2>Configuration</h2>
+    <div class="grid">
+      <div>
+        <label>Network</label>
+        <select id="network" onchange="applyNetwork()">
+          <option value="robinhood" selected>Robinhood Chain (4663)</option>
+          <option value="ethereum">Ethereum mainnet (1)</option>
+          <option value="custom">Custom / advanced</option>
+        </select>
+      </div>
+      <div>
+        <label>RPC URL</label>
+        <input type="text" id="rpc_url" value="https://rpc.mainnet.chain.robinhood.com" spellcheck="false">
+      </div>
+      <div>
+        <label>Token address to buy</label>
+        <input type="text" id="token_address" placeholder="0x…" spellcheck="false">
+      </div>
+      <div>
+        <label>Keys file path (on this machine)</label>
+        <input type="text" id="keys_path" value="keys.txt" spellcheck="false">
+      </div>
+      <div>
+        <label>Default ETH per wallet</label>
+        <input type="number" id="amount_eth" value="0.02" step="0.001" min="0">
+      </div>
+      <div>
+        <label>Slippage (%)</label>
+        <input type="number" id="slippage_pct" value="1.0" step="0.1" min="0">
+      </div>
+      <div>
+        <label>Gas reserve (ETH kept per wallet)</label>
+        <input type="number" id="gas_reserve_eth" value="0.005" step="0.001" min="0">
+      </div>
+      <div>
+        <label>Max gas price (gwei ceiling)</label>
+        <input type="number" id="max_gas_price_gwei" value="50" step="1" min="1">
+      </div>
+    </div>
+    <details style="margin-top:6px">
+      <summary style="cursor:pointer;color:var(--muted);font-size:12px">Advanced: DEX contract addresses (auto-set by network)</summary>
+      <div class="grid" style="margin-top:12px">
+        <div><label>WETH (wrapped ETH)</label>
+          <input type="text" id="weth_address" class="mono" spellcheck="false"></div>
+        <div><label>Uniswap SwapRouter02</label>
+          <input type="text" id="swap_router_address" class="mono" spellcheck="false"></div>
+        <div><label>Uniswap QuoterV2</label>
+          <input type="text" id="quoter_address" class="mono" spellcheck="false"></div>
+      </div>
+    </details>
+    <div class="row-btns">
+      <button class="btn-primary" id="btnConnect" onclick="connect()">Connect & load wallets</button>
+      <button class="btn-ghost" id="btnRefresh" onclick="loadWallets()" disabled>Refresh balances</button>
+      <button class="btn-ghost" onclick="openWM('evm')">👛 Manage wallets</button>
+    </div>
+  </div>
+
+  <!-- WALLETS -->
+  <div class="panel hidden" id="walletsPanel">
+    <div class="modebar">
+      <div class="seg">
+        <button class="seg-btn active" id="evmBuyBtn" onclick="setMode('evm','buy')">Buy</button>
+        <button class="seg-btn" id="evmSellBtn" onclick="setMode('evm','sell')">Sell</button>
+        <button class="seg-btn" id="evmTransferBtn" onclick="setMode('evm','transfer')">Transfer</button>
+      </div>
+      <div id="evmPctCtl" class="pctctl hidden">
+        Sell <input type="number" id="evmPct" value="100" min="1" max="100" class="pctinput" onchange="recompute()"> % of holdings
+        <button class="chip" onclick="setPct('evm',25)">25%</button>
+        <button class="chip" onclick="setPct('evm',50)">50%</button>
+        <button class="chip" onclick="setPct('evm',100)">100%</button>
+      </div>
+      <button class="chip" style="margin-left:auto" onclick="openWM('evm')">👛 Wallets</button>
+      <span class="muted" style="font-size:12px">Token — <span id="tokenLabel">token</span></span>
+    </div>
+
+    <!-- BUY / SELL trade area -->
+    <div id="evmTradeArea">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:34px"><input type="checkbox" class="checkbox" id="selAll" onchange="toggleAll(this)"></th>
+          <th>#</th>
+          <th>Address</th>
+          <th id="evmThBal">ETH balance</th>
+          <th id="evmThAmt">Spend (ETH)</th>
+          <th id="evmThEst">Est. tokens out</th>
+          <th id="evmThMin">Min out</th>
+          <th>Fee</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="walletRows"></tbody>
+    </table>
+    <div class="summary">
+      <div><b id="sumReady">0</b> selected & ready</div>
+      <div id="evmSpendLine">total spend <b>0</b> ETH <span class="muted">(+ gas)</span></div>
+    </div>
+    <div class="row-btns">
+      <button class="btn-ghost" id="btnQuote" onclick="quote()">Preview / quote (no funds moved)</button>
+      <button class="btn-exec" id="btnExecPrep" onclick="showConfirm()" disabled>Execute selected buys →</button>
+    </div>
+    <div id="execConfirm" class="hidden">
+      <div id="evmConfirmText">Confirm live execution.</div>
+      <div class="row-btns">
+        <button class="btn-exec" id="btnExecGo" onclick="execute()">Confirm &amp; broadcast</button>
+        <button class="btn-ghost" onclick="hideConfirm()">Cancel</button>
+      </div>
+    </div>
+    </div><!-- /evmTradeArea -->
+
+    <!-- TRANSFER area -->
+    <div id="evmTransferArea" class="hidden"></div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="panel hidden" id="resultsPanel">
+    <h2>Execution results</h2>
+    <table>
+      <thead><tr><th>#</th><th>Address</th><th>Transaction</th><th>Status</th></tr></thead>
+      <tbody id="resultRows"></tbody>
+    </table>
+  </div>
+  </div><!-- /tab-evm -->
+
+  <!-- ============================ SOLANA TAB ============================ -->
+  <div id="tab-solana" class="hidden">
+  <div class="panel">
+    <h2>Configuration — Solana (buys via Jupiter, spends SOL)</h2>
+    <div class="grid">
+      <div>
+        <label>Solana RPC URL <span class="muted" style="font-weight:400">— use Helius/QuickNode; the public one rate-limits</span></label>
+        <input type="text" id="s_rpc_url" value="https://api.mainnet-beta.solana.com" spellcheck="false">
+      </div>
+      <div>
+        <label>Token mint address to buy</label>
+        <input type="text" id="s_token_mint" placeholder="mint address…" spellcheck="false">
+      </div>
+      <div>
+        <label>Keys file path (on this machine)</label>
+        <input type="text" id="s_keys_path" value="solana_keys.txt" spellcheck="false">
+      </div>
+      <div>
+        <label>Default SOL per wallet</label>
+        <input type="number" id="s_amount_sol" value="0.05" step="0.001" min="0">
+      </div>
+      <div>
+        <label>Slippage (%)</label>
+        <input type="number" id="s_slippage_pct" value="1.0" step="0.1" min="0">
+      </div>
+      <div>
+        <label>SOL reserve (kept per wallet for fees)</label>
+        <input type="number" id="s_sol_reserve" value="0.01" step="0.001" min="0">
+      </div>
+      <div>
+        <label>Routing</label>
+        <select id="s_route">
+          <option value="auto" selected>Auto (Jupiter, fall back to pump.fun)</option>
+          <option value="jupiter">Jupiter only</option>
+          <option value="pump">pump.fun only</option>
+        </select>
+      </div>
+    </div>
+    <details style="margin-top:6px">
+      <summary style="cursor:pointer;color:var(--muted);font-size:12px">Advanced: execution, Jito &amp; Jupiter</summary>
+      <div class="grid" style="margin-top:12px">
+        <div><label>Priority fee (SOL, pump.fun)</label>
+          <input type="number" id="s_priority_fee" value="0.0005" step="0.0001" min="0"></div>
+        <div><label>Jitter: max delay between wallets (s)</label>
+          <input type="number" id="s_jitter_delay" value="0" step="0.5" min="0"></div>
+        <div><label>Jitter: amount variation (± %)</label>
+          <input type="number" id="s_jitter_amount" value="0" step="1" min="0" max="50"></div>
+        <div style="display:flex;align-items:flex-end;gap:8px">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin:0">
+            <input type="checkbox" id="s_jito" class="checkbox" onchange="solRecompute&&solRecompute()"> Bundle via Jito (atomic)</label>
+        </div>
+        <div><label>Jito tip (SOL per bundle)</label>
+          <input type="number" id="s_jito_tip" value="0.001" step="0.0005" min="0"></div>
+        <div><label>Jupiter base URL</label>
+          <input type="text" id="s_jupiter_base_url" value="https://lite-api.jup.ag/swap/v1" class="mono" spellcheck="false"></div>
+        <div><label>Jupiter API key (optional)</label>
+          <input type="text" id="s_jupiter_api_key" placeholder="blank = free tier" class="mono" spellcheck="false"></div>
+      </div>
+    </details>
+    <div class="row-btns">
+      <button class="btn-primary" id="s_btnConnect" onclick="solConnect()">Connect & load wallets</button>
+      <button class="btn-ghost" id="s_btnRefresh" onclick="solLoadWallets()" disabled>Refresh balances</button>
+      <button class="btn-ghost" onclick="openWM('sol')">👛 Manage wallets</button>
+    </div>
+  </div>
+
+  <div class="panel hidden" id="s_walletsPanel">
+    <div class="modebar">
+      <div class="seg">
+        <button class="seg-btn active" id="solBuyBtn" onclick="setMode('sol','buy')">Buy</button>
+        <button class="seg-btn" id="solSellBtn" onclick="setMode('sol','sell')">Sell</button>
+        <button class="seg-btn" id="solTransferBtn" onclick="setMode('sol','transfer')">Transfer</button>
+      </div>
+      <div id="solPctCtl" class="pctctl hidden">
+        Sell <input type="number" id="solPct" value="100" min="1" max="100" class="pctinput" onchange="solRecompute()"> % of holdings
+        <button class="chip" onclick="setPct('sol',25)">25%</button>
+        <button class="chip" onclick="setPct('sol',50)">50%</button>
+        <button class="chip" onclick="setPct('sol',100)">100%</button>
+      </div>
+      <button class="chip" style="margin-left:auto" onclick="openWM('sol')">👛 Wallets</button>
+      <span class="muted" style="font-size:12px">Token — <span id="s_tokenLabel">token</span></span>
+    </div>
+
+    <!-- Live price / market cap / position -->
+    <div id="solPriceBar" class="pricebar hidden">
+      <div><span class="pb-label">Price</span><span id="pbPrice" class="pb-val">—</span></div>
+      <div><span class="pb-label">24h</span><span id="pbChange" class="pb-val">—</span></div>
+      <div><span class="pb-label">Market cap</span><span id="pbMcap" class="pb-val">—</span></div>
+      <div><span class="pb-label">Liquidity</span><span id="pbLiq" class="pb-val">—</span></div>
+      <div><span class="pb-label">24h vol</span><span id="pbVol" class="pb-val">—</span></div>
+      <div><span class="pb-label">Your position</span><span id="pbPos" class="pb-val">—</span></div>
+      <div style="margin-left:auto"><span class="pb-label" id="pbUpdated">—</span></div>
+    </div>
+
+    <div class="safetybar">
+      <button class="btn-exec" id="panicBtn" style="background:var(--danger)" onclick="panicStop()">■ STOP ALL</button>
+      <span id="haltState" class="muted" style="font-size:12px"></span>
+      <span style="margin-left:auto;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px">
+        Spend cap (SOL, 0 = off)
+        <input type="number" id="spendCap" value="0" step="0.1" min="0" class="pctinput" style="width:78px" onchange="setSpendCap()">
+        <b id="spentLabel" style="color:var(--txt)">spent 0.000</b>
+        <button class="chip" onclick="resetSpent()">reset</button>
+      </span>
+    </div>
+
+    <div class="row-btns" style="margin-bottom:10px">
+      <button class="chip" onclick="solSelectWithBalance()">Select all with balance</button>
+      <button class="chip" onclick="toggleChart()">📈 Chart</button>
+      <button class="chip" onclick="window.open('/api/results.csv','_blank')">⬇ Download trades CSV</button>
+      <button class="chip" onclick="toggleBotPanel()">⚙ DCA &amp; Auto-sell</button>
+      <label class="chip" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+        <input type="checkbox" id="autoRefresh" class="checkbox" checked> Auto-refresh</label>
+    </div>
+
+    <div id="chartPanel" class="hidden" style="margin-bottom:14px;border:1px solid var(--line);border-radius:10px;overflow:hidden">
+      <iframe id="chartFrame" style="width:100%;height:460px;border:0;background:var(--panel2)" src="about:blank"></iframe>
+    </div>
+
+    <div id="solTradeArea">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:34px"><input type="checkbox" class="checkbox" id="s_selAll" onchange="solToggleAll(this)"></th>
+          <th>#</th><th>Address</th><th id="solThBal">SOL balance</th><th id="solThAmt">Spend (SOL)</th>
+          <th id="solThEst">Est. tokens out</th><th id="solThMin">Min out</th><th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="s_walletRows"></tbody>
+    </table>
+    <div class="summary">
+      <div><b id="s_sumReady">0</b> selected & ready</div>
+      <div id="solSpendLine">total spend <b>0</b> SOL <span class="muted">(+ fees)</span></div>
+    </div>
+    <div class="row-btns">
+      <button class="btn-ghost" id="s_btnQuote" onclick="solQuote()">Preview / quote (no funds moved)</button>
+      <button class="btn-exec" id="s_btnExecPrep" onclick="solShowConfirm()" disabled>Execute selected buys →</button>
+    </div>
+    <div id="s_execConfirm" class="hidden">
+      <div id="solConfirmText">Confirm live execution.</div>
+      <div class="row-btns">
+        <button class="btn-exec" id="s_btnExecGo" onclick="solExecute()">Confirm &amp; broadcast</button>
+        <button class="btn-ghost" onclick="solHideConfirm()">Cancel</button>
+      </div>
+    </div>
+    </div><!-- /solTradeArea -->
+
+    <div id="solTransferArea" class="hidden"></div>
+  </div>
+
+  <div class="panel hidden" id="s_resultsPanel">
+    <h2>Execution results</h2>
+    <table>
+      <thead><tr><th>#</th><th>Address</th><th>Transaction</th><th>Status</th></tr></thead>
+      <tbody id="s_resultRows"></tbody>
+    </table>
+  </div>
+
+  <!-- DCA & AUTO-SELL -->
+  <div class="panel hidden" id="botPanel">
+    <div class="grid">
+      <div class="panel" style="margin:0;background:var(--panel2)">
+        <h2>DCA — scheduled buys</h2>
+        <div class="grid">
+          <div><label>SOL per buy</label><input type="number" id="dcaAmount" value="0.02" step="0.001" min="0"></div>
+          <div><label>Every (minutes)</label><input type="number" id="dcaInterval" value="5" step="1" min="1"></div>
+          <div><label>Number of buys</label><input type="number" id="dcaCount" value="5" step="1" min="1"></div>
+        </div>
+        <div class="hint">Buys the selected wallets (checkboxes above), on the current routing.</div>
+        <div class="row-btns">
+          <button class="btn-primary" onclick="dcaStart()">Start DCA</button>
+          <button class="btn-ghost" onclick="dcaStop()">Stop</button>
+        </div>
+        <div id="dcaStatus" class="muted" style="font-size:12px;margin-top:8px">idle</div>
+      </div>
+
+      <div class="panel" style="margin:0;background:var(--panel2)">
+        <h2>Auto-sell — laddered exits</h2>
+        <table style="font-size:12px">
+          <thead><tr><th>Rung</th><th>Condition</th><th>Price / mcap (USD)</th><th>Sell %</th></tr></thead>
+          <tbody>
+            <tr><td class="muted">TP 1</td>
+              <td><select id="as1type"><option value="tp">price ≥</option><option value="mcap">mcap ≥</option></select></td>
+              <td><input type="number" id="as1val" value="0" step="0.000001" min="0" placeholder="0 = off"></td>
+              <td><input type="number" id="as1pct" value="50" step="5" min="1" max="100"></td></tr>
+            <tr><td class="muted">TP 2</td>
+              <td><select id="as2type"><option value="tp">price ≥</option><option value="mcap">mcap ≥</option></select></td>
+              <td><input type="number" id="as2val" value="0" step="0.000001" min="0" placeholder="0 = off"></td>
+              <td><input type="number" id="as2pct" value="50" step="5" min="1" max="100"></td></tr>
+            <tr><td class="muted">Stop-loss</td>
+              <td class="muted">price ≤</td>
+              <td><input type="number" id="asSlVal" value="0" step="0.000001" min="0" placeholder="0 = off"></td>
+              <td><input type="number" id="asSlPct" value="100" step="5" min="1" max="100"></td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:8px"><label>Trailing stop — sell all if price falls this % from the peak (0 = off)</label>
+          <input type="number" id="asTrail" value="0" step="1" min="0" max="90" style="width:120px"></div>
+        <div class="hint">Each rung fires once. Trailing follows the peak and sells everything on a drop.</div>
+        <div class="row-btns">
+          <button class="btn-exec" onclick="autosellArm()">Arm auto-sell</button>
+          <button class="btn-ghost" onclick="autosellDisarm()">Disarm</button>
+        </div>
+        <div id="asStatus" class="muted" style="font-size:12px;margin-top:8px">disarmed</div>
+      </div>
+    </div>
+  </div>
+  </div><!-- /tab-solana -->
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div id="genModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);align-items:center;justify-content:center;z-index:100">
+  <div class="panel" style="max-width:560px;width:90%;margin:0">
+    <h2>New wallet generated</h2>
+    <div class="banner warn"><span>⚠️</span><span>Save this private key now — anyone with it controls the wallet, and it will not be shown again. <span id="genNote"></span></span></div>
+    <label>Address</label>
+    <div class="mono" id="genAddr" style="word-break:break-all;padding:8px 0;color:var(--txt)"></div>
+    <label>Private key</label>
+    <div class="mono" id="genKey" style="word-break:break-all;padding:8px 0;color:var(--warn)"></div>
+    <div class="row-btns">
+      <button class="btn-ghost" onclick="copyGenKey()">Copy private key</button>
+      <button class="btn-primary" onclick="hideGen()">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- VAULT unlock / create gate -->
+<div id="vaultModal" style="display:none;position:fixed;inset:0;background:rgba(6,9,16,.92);align-items:center;justify-content:center;z-index:120">
+  <div class="panel" style="max-width:460px;width:90%;margin:0">
+    <div class="brand" style="margin-bottom:14px"><div class="logo">M</div><h1 style="font-size:16px">multibuy</h1></div>
+    <h2 id="vaultTitle">Unlock your wallets</h2>
+    <div id="vaultSub" class="muted" style="font-size:12.5px;margin-bottom:12px"></div>
+    <label>Password</label>
+    <input type="password" id="vaultPw" onkeydown="if(event.key==='Enter')vaultSubmit()" autocomplete="off">
+    <div id="vaultConfirmRow" class="hidden" style="margin-top:10px">
+      <label>Confirm password</label>
+      <input type="password" id="vaultPw2" onkeydown="if(event.key==='Enter')vaultSubmit()" autocomplete="off">
+    </div>
+    <div id="vaultErr" style="color:var(--danger);font-size:12px;margin-top:8px"></div>
+    <div class="row-btns">
+      <button class="btn-primary" id="vaultBtn" onclick="vaultSubmit()">Unlock</button>
+    </div>
+    <div class="hint" style="margin-top:10px">Your keys are encrypted on this device with this password. It's never stored or sent anywhere — if you lose it, the wallets can't be recovered.</div>
+  </div>
+</div>
+
+<!-- FIRST-RUN WIZARD -->
+<div id="wizModal" style="display:none;position:fixed;inset:0;background:rgba(6,9,16,.94);align-items:center;justify-content:center;z-index:130">
+  <div class="panel" style="max-width:540px;width:92%;margin:0">
+    <div class="brand" style="margin-bottom:6px"><div class="logo">M</div><h1 style="font-size:16px">Welcome to multibuy</h1></div>
+    <div id="wizDots" class="muted" style="font-size:11px;letter-spacing:.15em;margin-bottom:14px"></div>
+
+    <!-- Step 1: password -->
+    <div class="wizstep" id="wiz1">
+      <h2>1 · Set a password</h2>
+      <div class="muted" style="font-size:12.5px;margin-bottom:12px">This encrypts your wallet keys on this device. You'll enter it each time you open multibuy. It's never stored or sent anywhere — <b>if you lose it, your wallets can't be recovered</b>.</div>
+      <label>Password (min 6 characters)</label>
+      <input type="password" id="wizPw" autocomplete="off">
+      <label style="margin-top:10px">Confirm password</label>
+      <input type="password" id="wizPw2" autocomplete="off">
+    </div>
+
+    <!-- Step 2: chain -->
+    <div class="wizstep hidden" id="wiz2">
+      <h2>2 · Which chain?</h2>
+      <div class="muted" style="font-size:12.5px;margin-bottom:12px">You can use the other one later — this just sets up your first wallets and network.</div>
+      <div class="seg" style="width:100%">
+        <button class="seg-btn active" id="wizChainSol" style="flex:1" onclick="wizSetChain('solana')">Solana</button>
+        <button class="seg-btn" id="wizChainEvm" style="flex:1" onclick="wizSetChain('evm')">Ethereum / Robinhood</button>
+      </div>
+    </div>
+
+    <!-- Step 3: wallets -->
+    <div class="wizstep hidden" id="wiz3">
+      <h2>3 · Add wallets</h2>
+      <div class="muted" style="font-size:12.5px;margin-bottom:12px">Generate fresh wallets, or import keys you already have. You can add more or back them up anytime from the Wallets manager.</div>
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+        <div><label>How many to generate</label><input type="number" id="wizGenN" value="3" min="0" max="50" style="width:90px"></div>
+        <button class="btn-primary" onclick="wizGenerate()">Generate</button>
+        <span class="muted" id="wizWalletCount" style="font-size:12px">0 wallets</span>
+      </div>
+      <details style="margin-top:12px"><summary style="cursor:pointer;color:var(--muted);font-size:12px">or import existing keys</summary>
+        <textarea id="wizImport" rows="3" placeholder="one key per line" style="width:100%;margin-top:8px;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:9px;font-family:ui-monospace,monospace;font-size:12px"></textarea>
+        <button class="chip" onclick="wizImport()">Add imported keys</button>
+      </details>
+    </div>
+
+    <!-- Step 4: network -->
+    <div class="wizstep hidden" id="wiz4">
+      <h2>4 · Network &amp; token</h2>
+      <div class="muted" style="font-size:12.5px;margin-bottom:12px">An RPC is your connection to the blockchain. The free public one rate-limits with several wallets — grab a free key from <a href="https://helius.dev" target="_blank">Helius</a> (Solana) or <a href="https://alchemy.com" target="_blank">Alchemy</a> (EVM) for reliability.</div>
+      <label>RPC URL</label>
+      <input type="text" id="wizRpc" class="mono" spellcheck="false">
+      <label style="margin-top:10px">Token to trade (address / mint) — optional, you can set this later</label>
+      <input type="text" id="wizToken" class="mono" spellcheck="false" placeholder="paste a token address">
+    </div>
+
+    <!-- Step 5: done -->
+    <div class="wizstep hidden" id="wiz5">
+      <h2>✓ You're set up</h2>
+      <div class="muted" style="font-size:13px;margin-bottom:6px">Click <b>Connect &amp; load wallets</b> to see balances. Then pick <b>Buy</b>, <b>Sell</b>, or <b>Transfer</b>, choose wallets, Preview, and Confirm.</div>
+      <div class="banner warn" style="margin-top:10px"><span>⚠️</span><span>Start small — try one wallet first. Automated tools (DCA, auto-sell, Jito) move real funds; the red <b>STOP ALL</b> halts everything.</span></div>
+    </div>
+
+    <div id="wizErr" style="color:var(--danger);font-size:12px;margin-top:8px"></div>
+    <div class="row-btns" style="margin-top:14px">
+      <button class="btn-ghost hidden" id="wizBack" onclick="wizGo(WIZ.step-1)">Back</button>
+      <button class="btn-primary" id="wizNext" onclick="wizNext()">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- WALLET MANAGER -->
+<div id="wmModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);align-items:center;justify-content:center;z-index:110">
+  <div class="panel" style="max-width:720px;width:94%;margin:0;max-height:88vh;overflow:auto">
+    <div style="display:flex;align-items:center;gap:12px">
+      <h2 style="margin:0">Wallets — <span id="wmChainLabel">Solana</span></h2>
+      <span class="muted" style="font-size:12px" id="wmCount"></span>
+      <button class="chip" style="margin-left:auto" onclick="vaultLock()">🔒 Lock vault</button>
+      <button class="btn-ghost" onclick="hideWM()">Close</button>
+    </div>
+    <div class="row-btns" style="margin-top:12px">
+      <button class="btn-primary" onclick="wmGenerate()">＋ Generate new wallet</button>
+      <button class="chip" onclick="document.getElementById('wmImportRow').classList.toggle('hidden')">Import existing key</button>
+    </div>
+    <div id="wmImportRow" class="hidden" style="margin-top:10px">
+      <label>Paste private key(s) — one per line (base58 / 0x / JSON array)</label>
+      <textarea id="wmImport" rows="3" style="width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:9px;font-family:ui-monospace,monospace;font-size:12px"></textarea>
+      <div class="row-btns"><button class="btn-primary" onclick="wmImport()">Add to vault</button></div>
+    </div>
+    <table style="margin-top:14px;font-size:13px">
+      <thead><tr><th>Label</th><th>Address</th><th style="width:180px"></th></tr></thead>
+      <tbody id="wmRows"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+let CONNECTED=false, WALLETS=[], TOKEN=null, RESULTS=[], pollTimer=null;
+let MODE={evm:'buy', sol:'buy'};
+
+const $=id=>document.getElementById(id);
+
+function setMode(tab, mode){
+  MODE[tab]=mode;
+  const transfer=mode==='transfer';
+  if(tab==='evm'){
+    $("evmBuyBtn").classList.toggle('active',mode==='buy');
+    $("evmSellBtn").classList.toggle('active',mode==='sell');
+    $("evmTransferBtn").classList.toggle('active',transfer);
+    $("evmPctCtl").classList.toggle('hidden',mode!=='sell');
+    $("evmTradeArea").classList.toggle('hidden',transfer);
+    $("evmTransferArea").classList.toggle('hidden',!transfer);
+    if(transfer){ xferBuild('evm'); return; }
+    $("evmThBal").textContent=mode==='sell'?'Token balance':'ETH balance';
+    $("evmThAmt").textContent=mode==='sell'?'Sell amount':'Spend (ETH)';
+    $("evmThEst").textContent=mode==='sell'?'Est. ETH out':'Est. tokens out';
+    $("evmThMin").textContent=mode==='sell'?'Min ETH out':'Min out';
+    $("btnExecPrep").textContent=mode==='sell'?'Execute selected sells →':'Execute selected buys →';
+    if(WALLETS.length)renderWallets();
+  }else{
+    $("solBuyBtn").classList.toggle('active',mode==='buy');
+    $("solSellBtn").classList.toggle('active',mode==='sell');
+    $("solTransferBtn").classList.toggle('active',transfer);
+    $("solPctCtl").classList.toggle('hidden',mode!=='sell');
+    $("solTradeArea").classList.toggle('hidden',transfer);
+    $("solTransferArea").classList.toggle('hidden',!transfer);
+    if(transfer){ xferBuild('sol'); return; }
+    $("solThBal").textContent=mode==='sell'?'Token balance':'SOL balance';
+    $("solThAmt").textContent=mode==='sell'?'Sell amount':'Spend (SOL)';
+    $("solThEst").textContent=mode==='sell'?'Est. SOL out':'Est. tokens out';
+    $("solThMin").textContent=mode==='sell'?'Min SOL out':'Min out';
+    $("s_btnExecPrep").textContent=mode==='sell'?'Execute selected sells →':'Execute selected buys →';
+    if(S_WALLETS.length)solRenderWallets();
+  }
+}
+function setPct(tab,v){ $(tab==='evm'?'evmPct':'solPct').value=v; (tab==='evm'?recompute:solRecompute)(); }
+
+// ===========================================================================
+// ENCRYPTED VAULT + WALLET MANAGER
+// ===========================================================================
+let VAULT={exists:false, unlocked:false, mode:'unlock'};
+async function vaultBoot(){
+  try{
+    const j=await api("/api/vault/status");
+    VAULT.exists=j.exists; VAULT.unlocked=j.unlocked;
+    if(j.unlocked){ $("vaultModal").style.display="none"; return; }
+    if(!j.exists){ wizStart(); return; }   // brand-new user -> guided setup
+    VAULT.mode = 'unlock';
+    $("vaultTitle").textContent = j.exists ? "Unlock your wallets" : "Create a password";
+    $("vaultSub").textContent = j.exists
+      ? "Enter the password that encrypts your wallets on this device."
+      : "Set a password to encrypt your wallet keys on this device. You'll need it each time you open multibuy.";
+    $("vaultConfirmRow").classList.toggle("hidden", j.exists);
+    $("vaultBtn").textContent = j.exists ? "Unlock" : "Create vault";
+    $("vaultErr").textContent="";
+    $("vaultModal").style.display="flex"; $("vaultPw").value=""; $("vaultPw").focus();
+  }catch(e){}
+}
+async function vaultSubmit(){
+  const pw=$("vaultPw").value; $("vaultErr").textContent="";
+  try{
+    if(VAULT.mode==='create'){
+      if(pw.length<6){$("vaultErr").textContent="Password must be at least 6 characters.";return;}
+      if(pw!==$("vaultPw2").value){$("vaultErr").textContent="Passwords don't match.";return;}
+      await api("/api/vault/create",{password:pw});
+    }else{ await api("/api/vault/unlock",{password:pw}); }
+    VAULT.unlocked=true; $("vaultModal").style.display="none";
+    toast(VAULT.mode==='create'?"Vault created":"Unlocked");
+  }catch(e){ $("vaultErr").textContent=e.message; }
+}
+async function vaultLock(){ try{ await api("/api/vault/lock",{}); }catch(e){}; hideWM(); vaultBoot(); }
+
+let WM={chain:'solana'};
+function openWM(tab){
+  if(!VAULT.unlocked){ vaultBoot(); return; }
+  WM.chain = tab==='evm' ? 'evm' : 'solana';
+  $("wmChainLabel").textContent = WM.chain==='evm' ? "EVM (Ethereum/Robinhood)" : "Solana";
+  $("wmModal").style.display="flex"; wmRefresh();
+}
+function hideWM(){ $("wmModal").style.display="none"; }
+async function wmRefresh(){
+  try{
+    const j=await api("/api/vault/wallets");
+    const list=(j.wallets[WM.chain]||[]);
+    $("wmCount").textContent=list.length+" wallet(s)";
+    const tb=$("wmRows"); tb.innerHTML="";
+    list.forEach((w,i)=>{
+      const tr=document.createElement("tr");
+      tr.innerHTML=`
+        <td><input value="${(w.label||'').replace(/"/g,'&quot;')}" class="mono" style="width:130px;background:var(--panel2);border:1px solid var(--line);color:var(--txt);border-radius:6px;padding:5px 7px"
+             onblur="wmRename(${i}, this.value)"></td>
+        <td class="mono" style="font-size:11px" title="${w.address}">${w.address.slice(0,8)}…${w.address.slice(-6)}</td>
+        <td style="text-align:right">
+          <button class="chip" onclick="wmReveal(${i})">reveal</button>
+          <button class="chip" onclick="wmRemove(${i})" style="border-color:rgba(255,107,107,.4)">remove</button>
+        </td>`;
+      tb.appendChild(tr);
+    });
+  }catch(e){toast(e.message,true);}
+}
+async function wmGenerate(){
+  try{
+    const j=await api("/api/vault/add",{chain:WM.chain, generate:true});
+    if(j.generated_secret) showGen(WM.chain==='evm'?'evm':'sol', {address:j.address, private_key:j.generated_secret}, false, "saved in your encrypted vault");
+    wmRefresh();
+  }catch(e){toast(e.message,true);}
+}
+async function wmImport(){
+  const lines=$("wmImport").value.split("\n").map(x=>x.trim()).filter(Boolean);
+  if(!lines.length){toast("Paste at least one key",true);return;}
+  let ok=0,fail=0;
+  for(const s of lines){ try{ await api("/api/vault/add",{chain:WM.chain, secret:s}); ok++; }catch(e){ fail++; } }
+  $("wmImport").value=""; $("wmImportRow").classList.add("hidden");
+  toast(`Imported ${ok}${fail?`, ${fail} failed`:""}`); wmRefresh();
+}
+async function wmRemove(i){ try{ await api("/api/vault/remove",{chain:WM.chain, index:i}); wmRefresh(); }catch(e){toast(e.message,true);} }
+async function wmRename(i,label){ try{ await api("/api/vault/rename",{chain:WM.chain, index:i, label}); }catch(e){} }
+async function wmReveal(i){
+  const pw=prompt("Enter your vault password to reveal this private key:");
+  if(!pw)return;
+  try{
+    const j=await api("/api/vault/reveal",{chain:WM.chain, index:i, password:pw});
+    showGen(WM.chain==='evm'?'evm':'sol', {address:j.address, private_key:j.secret}, false, "from your vault — keep it secret");
+  }catch(e){toast(e.message,true);}
+}
+
+// ===========================================================================
+// FIRST-RUN WIZARD
+// ===========================================================================
+let WIZ={step:1, chain:'solana', added:0};
+function wizStart(){ WIZ={step:1,chain:'solana',added:0}; $("wizModal").style.display="flex"; wizGo(1); }
+function wizGo(n){
+  WIZ.step=Math.max(1,Math.min(5,n));
+  for(let i=1;i<=5;i++) $("wiz"+i).classList.toggle("hidden", i!==WIZ.step);
+  $("wizDots").textContent = "STEP "+WIZ.step+" OF 5   "+"●".repeat(WIZ.step)+"○".repeat(5-WIZ.step);
+  $("wizBack").classList.toggle("hidden", WIZ.step===1 || WIZ.step===5);
+  $("wizNext").textContent = WIZ.step>=5 ? "Finish" : (WIZ.step===4?"Finish setup":"Next →");
+  $("wizErr").textContent="";
+  if(WIZ.step===4){ // prefill RPC/token from the chain choice
+    if(WIZ.chain==='solana'){ $("wizRpc").value=$("wizRpc").value||"https://api.mainnet-beta.solana.com"; }
+    else { $("wizRpc").value=$("wizRpc").value||"https://rpc.mainnet.chain.robinhood.com"; }
+  }
+}
+function wizSetChain(c){ WIZ.chain=c;
+  $("wizChainSol").classList.toggle("active",c==='solana');
+  $("wizChainEvm").classList.toggle("active",c==='evm');
+}
+async function wizGenerate(){
+  const n=Math.max(0,Math.min(50, +$("wizGenN").value||0));
+  let ok=0;
+  for(let i=0;i<n;i++){ try{ await api("/api/vault/add",{chain:WIZ.chain, generate:true}); ok++; }catch(e){} }
+  WIZ.added+=ok; $("wizWalletCount").textContent=WIZ.added+" wallets";
+  toast("Generated "+ok+" wallet(s)");
+}
+async function wizImport(){
+  const lines=$("wizImport").value.split("\n").map(x=>x.trim()).filter(Boolean);
+  let ok=0; for(const s of lines){ try{ await api("/api/vault/add",{chain:WIZ.chain, secret:s}); ok++; }catch(e){} }
+  WIZ.added+=ok; $("wizWalletCount").textContent=WIZ.added+" wallets"; $("wizImport").value="";
+  toast("Imported "+ok+" wallet(s)");
+}
+async function wizNext(){
+  $("wizErr").textContent="";
+  try{
+    if(WIZ.step===1){
+      const pw=$("wizPw").value;
+      if(pw.length<6){$("wizErr").textContent="Password must be at least 6 characters.";return;}
+      if(pw!==$("wizPw2").value){$("wizErr").textContent="Passwords don't match.";return;}
+      await api("/api/vault/create",{password:pw}); VAULT.unlocked=true;
+      wizGo(2); return;
+    }
+    if(WIZ.step===2){ wizGo(3); return; }
+    if(WIZ.step===3){
+      if(WIZ.added===0 && !confirm("No wallets added yet — continue anyway? You can add them later in Wallets.")) return;
+      wizGo(4); return;
+    }
+    if(WIZ.step===4){
+      // apply the choices to the live form + save config
+      if(WIZ.chain==='solana'){ switchTab('solana'); $("s_rpc_url").value=$("wizRpc").value.trim(); if($("wizToken").value.trim())$("s_token_mint").value=$("wizToken").value.trim(); }
+      else { switchTab('evm'); $("rpc_url").value=$("wizRpc").value.trim(); if($("wizToken").value.trim())$("token_address").value=$("wizToken").value.trim(); }
+      saveConfig();
+      wizGo(5); return;
+    }
+    // step 5 -> finish
+    $("wizModal").style.display="none";
+    toast("Ready — click Connect & load wallets");
+  }catch(e){ $("wizErr").textContent=e.message; }
+}
+
+function toast(msg,err=false){const t=$("toast");t.textContent=msg;t.className="toast show"+(err?" err":"");
+  clearTimeout(t._t);t._t=setTimeout(()=>t.className="toast",3200);}
+// Persistent, dismissible error banner — for failures that must NOT vanish
+// (connect/load errors especially). Shows a toast too, but the banner stays.
+function showErr(msg){const b=$("errBanner");$("errBannerMsg").textContent=msg;
+  b.classList.remove("hidden");toast(msg,true);}
+function clearErr(){$("errBanner").classList.add("hidden");$("errBannerMsg").textContent="";}
+function shortAddr(a){return a.slice(0,6)+"…"+a.slice(-4);}
+
+// Uniswap V3 deployments per network. ETH is the gas token on both.
+const NETWORKS={
+  robinhood:{
+    rpc:"https://rpc.mainnet.chain.robinhood.com",
+    weth:"0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73",
+    router:"0xcaf681a66d020601342297493863e78c959e5cb2",
+    quoter:"0x33e885ed0ec9bf04ecfb19341582aadcb4c8a9e7",
+  },
+  ethereum:{
+    rpc:"https://eth.llamarpc.com",
+    weth:"0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+    router:"0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45",
+    quoter:"0x61fFE014bA17989E743c5F6cB21bF9697530B21e",
+  },
+};
+function applyNetwork(){
+  const n=$("network").value;
+  if(n==="custom"){return;}          // leave fields for manual editing
+  const p=NETWORKS[n];
+  $("rpc_url").value=p.rpc;
+  $("weth_address").value=p.weth;
+  $("swap_router_address").value=p.router;
+  $("quoter_address").value=p.quoter;
+}
+
+function cfgBody(){
+  return {
+    rpc_url:$("rpc_url").value, token_address:$("token_address").value,
+    keys_path:$("keys_path").value, amount_eth:parseFloat($("amount_eth").value),
+    slippage_bps:Math.round(parseFloat($("slippage_pct").value)*100),
+    gas_reserve_eth:parseFloat($("gas_reserve_eth").value),
+    max_gas_price_gwei:parseFloat($("max_gas_price_gwei").value),
+    weth_address:$("weth_address").value.trim(),
+    swap_router_address:$("swap_router_address").value.trim(),
+    quoter_address:$("quoter_address").value.trim(),
+  };
+}
+async function api(path,body){
+  const r=await fetch(path,{method:body?"POST":"GET",
+    headers:{"Content-Type":"application/json"},body:body?JSON.stringify(body):undefined});
+  const j=await r.json();
+  if(!j.ok) throw new Error(j.error||"request failed");
+  return j;
+}
+function setGas(g){
+  $("gasGwei").textContent=g.gas_gwei.toFixed(1);
+  $("gasGwei").style.color=g.over_ceiling?"var(--danger)":"var(--txt)";
+}
+
+async function connect(){
+  const btn=$("btnConnect");btn.disabled=true;btn.innerHTML='<span class="spin"></span>connecting';
+  clearErr();
+  try{
+    const j=await api("/api/connect",cfgBody());
+    CONNECTED=true;TOKEN=j.token;
+    $("connDot").className="dot on";$("connText").textContent="connected";
+    $("chainId").textContent=j.chain_id;$("walletCount").textContent=j.wallet_count;
+    setGas(j.gas);
+    $("tokenLabel").textContent=(j.token.symbol||"TOKEN")+"  "+shortAddr(j.token.address);
+    $("btnRefresh").disabled=false;
+    $("walletsPanel").classList.remove("hidden");
+    toast("Connected — "+j.wallet_count+" wallet(s), loading balances…");
+    await loadWallets();
+  }catch(e){showErr("Connect failed: "+e.message);$("connDot").className="dot off";$("connText").textContent="disconnected";}
+  btn.disabled=false;btn.textContent="Connect & load wallets";
+}
+
+async function loadWallets(){
+  try{
+    const j=await api("/api/wallets");
+    WALLETS=j.wallets||[];setGas(j.gas);renderWallets();
+    toast(WALLETS.length+" wallet(s) loaded");
+  }catch(e){showErr("Could not load balances: "+e.message);}
+}
+
+function renderWallets(){
+  const sell=MODE.evm==='sell';
+  const tb=$("walletRows");tb.innerHTML="";
+  WALLETS.forEach(w=>{
+    const amtCell=sell
+      ? `<span class="mono sellamt" data-i="${w.index}">—</span>`
+      : `<input type="number" class="amt-input mono" data-i="${w.index}" value="${(+$("amount_eth").value).toFixed(3)}" step="0.001" min="0" onchange="recompute()">`;
+    const balCell=sell
+      ? `<span class="tokbal" data-i="${w.index}">${w.token_balance!=null?fmt(w.token_balance):'—'}</span>`
+      : (w.eth!=null?w.eth.toFixed(5):'—');
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td><input type="checkbox" class="checkbox rowsel" data-i="${w.index}" onchange="recompute()"></td>
+      <td class="muted">${w.index}</td>
+      <td class="mono addr" title="${w.address}">${shortAddr(w.address)}</td>
+      <td class="mono">${balCell}</td>
+      <td>${amtCell}</td>
+      <td class="mono est" data-i="${w.index}">—</td>
+      <td class="mono min" data-i="${w.index}">—</td>
+      <td class="mono fee" data-i="${w.index}">—</td>
+      <td class="stat" data-i="${w.index}"><span class="tag skip">not quoted</span></td>`;
+    tb.appendChild(tr);
+  });
+  recompute();
+}
+
+function amounts(){
+  const m={};document.querySelectorAll(".amt-input:not(.s_amt)").forEach(el=>m[el.dataset.i]=parseFloat(el.value)||0);return m;
+}
+function selectedIdx(){
+  return [...document.querySelectorAll(".rowsel:checked")].map(el=>+el.dataset.i);
+}
+function toggleAll(cb){document.querySelectorAll(".rowsel").forEach(el=>el.checked=cb.checked);recompute();}
+
+function recompute(){
+  const sel=selectedIdx();
+  $("sumReady").textContent=sel.length;
+  $("btnExecPrep").disabled=sel.length===0;
+  if(MODE.evm==='sell'){
+    $("evmSpendLine").innerHTML=`selling <b>${(+$("evmPct").value)}%</b> of holdings for ETH <span class="muted">(+ gas)</span>`;
+  }else{
+    const am=amounts();let total=0;sel.forEach(i=>total+=am[i]||0);
+    $("evmSpendLine").innerHTML=`total spend <b>${total.toFixed(4)}</b> ETH <span class="muted">(+ gas)</span>`;
+  }
+}
+
+async function quote(){
+  const btn=$("btnQuote");btn.disabled=true;btn.innerHTML='<span class="spin"></span>quoting';
+  try{
+    const sell=MODE.evm==='sell';
+    const body=sell?{side:'sell',pct:+$("evmPct").value}:{amounts:amounts()};
+    const j=await api("/api/quote",body);
+    setGas(j.gas);
+    j.rows.forEach(r=>{
+      const est=document.querySelector(`.est[data-i="${r.index}"]`);
+      const min=document.querySelector(`.min[data-i="${r.index}"]`);
+      const fee=document.querySelector(`.fee[data-i="${r.index}"]`);
+      const stat=document.querySelector(`.stat[data-i="${r.index}"]`);
+      if(sell){
+        const tb=document.querySelector(`.tokbal[data-i="${r.index}"]`);
+        const sa=document.querySelector(`.sellamt[data-i="${r.index}"]`);
+        if(tb&&r.token_balance!=null)tb.textContent=fmt(r.token_balance);
+        if(r.skip_reason){
+          if(sa)sa.textContent="—";est.textContent="—";min.textContent="—";fee.textContent="—";
+          stat.innerHTML=`<span class="tag skip" title="${r.skip_reason}">skip</span>`;
+        }else{
+          if(sa)sa.textContent=fmt(r.sell_amount);
+          est.textContent=fmt(r.expected_out);min.textContent=fmt(r.min_out);
+          fee.textContent=(r.fee_tier/10000).toFixed(2)+"%";
+          stat.innerHTML=r.needs_approval
+            ? `<span class="tag pending" title="a one-time approval tx is sent first">ready · approve</span>`
+            : `<span class="tag buy">ready</span>`;
+        }
+      }else{
+        if(r.skip_reason){
+          est.textContent="—";min.textContent="—";fee.textContent="—";
+          stat.innerHTML=`<span class="tag skip" title="${r.skip_reason}">skip</span>`;
+        }else{
+          est.textContent=fmt(r.expected_out);min.textContent=fmt(r.min_out);
+          fee.textContent=(r.fee_tier/10000).toFixed(2)+"%";
+          stat.innerHTML=`<span class="tag buy">ready</span>`;
+        }
+      }
+    });
+    toast("Quoted "+j.rows.length+" wallet(s)");
+  }catch(e){toast(e.message,true);}
+  btn.disabled=false;btn.textContent="Preview / quote (no funds moved)";
+}
+function fmt(n){
+  if(n==null||isNaN(n))return "—";
+  n=Number(n);
+  return n>=1?n.toLocaleString(undefined,{maximumFractionDigits:4}):n.toPrecision(4);
+}
+
+function showConfirm(){
+  const sel=selectedIdx();
+  const tok=(TOKEN&&TOKEN.symbol)||"the token";
+  if(MODE.evm==='sell'){
+    $("evmConfirmText").innerHTML=`<b>Confirm live sell.</b> This will sell <b>${(+$("evmPct").value)}%</b> of `
+      +`${tok} held by <b>${sel.length}</b> wallet(s) for ETH. Wallets needing it get a one-time approval tx first. `
+      +`Click Confirm to proceed.`;
+  }else{
+    const am=amounts();let total=0;sel.forEach(i=>total+=am[i]||0);
+    $("evmConfirmText").innerHTML=`<b>Confirm live execution.</b> This will broadcast real transactions spending `
+      +`<b>${total.toFixed(4)} ETH</b> across <b>${sel.length}</b> wallets to buy <b>${tok}</b>. `
+      +`Click Confirm to proceed.`;
+  }
+  $("execConfirm").classList.remove("hidden");
+  
+}
+function hideConfirm(){$("execConfirm").classList.add("hidden");}
+
+async function execute(){
+  const sel=selectedIdx();if(!sel.length){toast("Nothing selected",true);return;}
+  const btn=$("btnExecGo");btn.disabled=true;btn.innerHTML='<span class="spin"></span>broadcasting';
+  try{
+    const body=MODE.evm==='sell'
+      ? {selected:sel,side:'sell',pct:+$("evmPct").value}
+      : {selected:sel,amounts:amounts()};
+    const j=await api("/api/execute",body);
+    RESULTS=j.results;hideConfirm();renderResults();startPolling();
+    const sent=RESULTS.filter(r=>r.ok).length;
+    toast(sent+" broadcast, "+(RESULTS.length-sent)+" failed");
+  }catch(e){toast(e.message,true);}
+  btn.disabled=false;btn.textContent="Broadcast now";
+}
+
+function renderResults(){
+  $("resultsPanel").classList.remove("hidden");
+  const tb=$("resultRows");tb.innerHTML="";
+  RESULTS.forEach(r=>{
+    const tr=document.createElement("tr");
+    let txcell="—",stat=`<span class="tag fail" title="${r.error||''}">failed</span>`;
+    if(r.ok&&r.tx_hash){
+      const h=r.tx_hash.startsWith("0x")?r.tx_hash:"0x"+r.tx_hash;
+      let approve="";
+      if(r.approve_hash){
+        const a=r.approve_hash.startsWith("0x")?r.approve_hash:"0x"+r.approve_hash;
+        approve=` <span class="muted" style="font-size:11px">· <a href="https://etherscan.io/tx/${a}" target="_blank">approval</a></span>`;
+      }
+      txcell=`<a class="mono" href="https://etherscan.io/tx/${h}" target="_blank">${h.slice(0,10)}…${h.slice(-8)}</a>${approve}`;
+      stat=`<span class="tag sent rc" data-h="${h}">sent</span>`;
+    }
+    tr.innerHTML=`<td class="muted">${r.index}</td>
+      <td class="mono">${shortAddr(r.address)}</td>
+      <td>${txcell}</td><td>${stat}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function startPolling(){
+  if(pollTimer)clearInterval(pollTimer);
+  const hashes=RESULTS.filter(r=>r.ok&&r.tx_hash).map(r=>r.tx_hash.startsWith("0x")?r.tx_hash:"0x"+r.tx_hash);
+  if(!hashes.length)return;
+  pollTimer=setInterval(async()=>{
+    try{
+      const j=await api("/api/receipts",{hashes});
+      let allDone=true;
+      hashes.forEach(h=>{
+        const st=j.receipts[h]||{status:"pending"};
+        const el=document.querySelector(`.rc[data-h="${h}"]`);
+        if(el){
+          if(st.status==="confirmed"){el.className="tag confirmed rc";el.textContent="confirmed · blk "+st.block;}
+          else if(st.status==="reverted"){el.className="tag reverted rc";el.textContent="reverted";}
+          else if(st.status==="unknown"){el.className="tag pending rc";el.textContent="unknown";}
+          else{el.className="tag pending rc";el.textContent="pending";allDone=false;}
+        }
+      });
+      if(allDone){clearInterval(pollTimer);pollTimer=null;}
+    }catch(e){}
+  },4000);
+}
+
+// ===========================================================================
+// TABS
+// ===========================================================================
+function switchTab(t){
+  const evm=t==="evm";
+  $("tab-evm").classList.toggle("hidden",!evm);
+  $("tab-solana").classList.toggle("hidden",evm);
+  $("tabBtnEvm").classList.toggle("active",evm);
+  $("tabBtnSol").classList.toggle("active",!evm);
+}
+
+// ===========================================================================
+// SOLANA TAB
+// ===========================================================================
+let S_WALLETS=[], S_TOKEN=null, S_RESULTS=[];
+
+function solCfgBody(){
+  return {
+    rpc_url:$("s_rpc_url").value, token_mint:$("s_token_mint").value,
+    keys_path:$("s_keys_path").value, amount_sol:parseFloat($("s_amount_sol").value),
+    slippage_bps:Math.round(parseFloat($("s_slippage_pct").value)*100),
+    sol_reserve:parseFloat($("s_sol_reserve").value),
+    jupiter_base_url:$("s_jupiter_base_url").value.trim(),
+    jupiter_api_key:$("s_jupiter_api_key").value.trim(),
+    route:$("s_route").value,
+    priority_fee:parseFloat($("s_priority_fee").value)||0,
+    jito_enabled:$("s_jito").checked,
+    jito_tip:parseFloat($("s_jito_tip").value)||0,
+    jitter_delay_max:parseFloat($("s_jitter_delay").value)||0,
+    jitter_amount_pct:parseFloat($("s_jitter_amount").value)||0,
+  };
+}
+function solExecOpts(){
+  return {route:$("s_route").value, jito_enabled:$("s_jito").checked,
+          jito_tip:parseFloat($("s_jito_tip").value)||0,
+          jitter_delay_max:parseFloat($("s_jitter_delay").value)||0,
+          jitter_amount_pct:parseFloat($("s_jitter_amount").value)||0};
+}
+
+async function solConnect(){
+  const btn=$("s_btnConnect");btn.disabled=true;btn.innerHTML='<span class="spin"></span>connecting';
+  clearErr();
+  try{
+    const j=await api("/api/sol/connect",solCfgBody());
+    S_TOKEN={mint:j.token_mint,decimals:j.decimals};
+    $("connDot").className="dot on";$("connText").textContent="connected · solana";
+    $("chainId").textContent="solana";$("walletCount").textContent=j.wallet_count;
+    $("gasGwei").textContent="—";
+    $("s_tokenLabel").textContent=shortAddr(j.token_mint)+"  ·  "+j.decimals+" decimals";
+    $("s_btnRefresh").disabled=false;
+    $("s_walletsPanel").classList.remove("hidden");
+    // Show connected first, THEN load balances, so a load error isn't hidden
+    // by a later "Connected" toast.
+    toast("Connected — "+j.wallet_count+" Solana wallet(s), loading balances…");
+    await solLoadWallets();
+    startPricePolling();
+    saveConfig();
+  }catch(e){showErr("Connect failed: "+e.message);$("connDot").className="dot off";$("connText").textContent="disconnected";}
+  btn.disabled=false;btn.textContent="Connect & load wallets";
+}
+
+async function solLoadWallets(){
+  try{
+    const j=await api("/api/sol/wallets");
+    S_WALLETS=j.wallets||[];solRenderWallets();
+    toast(S_WALLETS.length+" wallet(s) loaded");
+  }catch(e){showErr("Could not load balances: "+e.message);}
+}
+
+function solRenderWallets(){
+  const sell=MODE.sol==='sell';
+  const tb=$("s_walletRows");tb.innerHTML="";
+  S_WALLETS.forEach(w=>{
+    const amtCell=sell
+      ? `<span class="mono s_sellamt" data-i="${w.index}">—</span>`
+      : `<input type="number" class="amt-input mono s_amt" data-i="${w.index}" value="${(+$("s_amount_sol").value).toFixed(3)}" step="0.001" min="0" onchange="solRecompute()">`;
+    const balCell=sell
+      ? `<span class="s_tokbal" data-i="${w.index}">${w.token_balance!=null?fmt(w.token_balance):'—'}</span>`
+      : `<span class="s_solbal" data-i="${w.index}">${w.sol!=null?w.sol.toFixed(5):'—'}</span>`;
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td><input type="checkbox" class="checkbox s_rowsel" data-i="${w.index}" onchange="solRecompute()"></td>
+      <td class="muted">${w.index}</td>
+      <td class="mono addr" title="${w.pubkey}">${shortAddr(w.pubkey)}</td>
+      <td class="mono">${balCell}</td>
+      <td>${amtCell}</td>
+      <td class="mono s_est" data-i="${w.index}">—</td>
+      <td class="mono s_min" data-i="${w.index}">—</td>
+      <td class="s_stat" data-i="${w.index}"><span class="tag skip">not quoted</span></td>`;
+    tb.appendChild(tr);
+  });
+  solRecompute();
+}
+
+function solAmounts(){
+  const m={};document.querySelectorAll(".s_amt").forEach(el=>m[el.dataset.i]=parseFloat(el.value)||0);return m;
+}
+function solSelectedIdx(){return [...document.querySelectorAll(".s_rowsel:checked")].map(el=>+el.dataset.i);}
+function solToggleAll(cb){document.querySelectorAll(".s_rowsel").forEach(el=>el.checked=cb.checked);solRecompute();}
+function solRecompute(){
+  const sel=solSelectedIdx();
+  $("s_sumReady").textContent=sel.length;
+  $("s_btnExecPrep").disabled=sel.length===0;
+  if(MODE.sol==='sell'){
+    $("solSpendLine").innerHTML=`selling <b>${(+$("solPct").value)}%</b> of holdings for SOL <span class="muted">(+ fees)</span>`;
+  }else{
+    const am=solAmounts();let total=0;sel.forEach(i=>total+=am[i]||0);
+    $("solSpendLine").innerHTML=`total spend <b>${total.toFixed(4)}</b> SOL <span class="muted">(+ fees)</span>`;
+  }
+}
+
+async function solQuote(){
+  const btn=$("s_btnQuote");btn.disabled=true;btn.innerHTML='<span class="spin"></span>quoting';
+  try{
+    const sell=MODE.sol==='sell';
+    const body=sell?{side:'sell',pct:+$("solPct").value}:{amounts:solAmounts()};
+    body.route=$("s_route").value;
+    const j=await api("/api/sol/quote",body);
+    j.rows.forEach(r=>{
+      const est=document.querySelector(`.s_est[data-i="${r.index}"]`);
+      const min=document.querySelector(`.s_min[data-i="${r.index}"]`);
+      const stat=document.querySelector(`.s_stat[data-i="${r.index}"]`);
+      if(sell){
+        const tb=document.querySelector(`.s_tokbal[data-i="${r.index}"]`);
+        const sa=document.querySelector(`.s_sellamt[data-i="${r.index}"]`);
+        if(tb&&r.token_balance!=null)tb.textContent=fmt(r.token_balance);
+        if(r.skip_reason){
+          if(sa)sa.textContent="—";est.textContent="—";min.textContent="—";
+          stat.innerHTML=`<span class="tag skip" title="${r.skip_reason}">skip</span>`;
+        }else{
+          if(sa)sa.textContent=fmt(r.sell_amount);
+          est.textContent=fmt(r.expected_out);min.textContent=fmt(r.min_out);
+          stat.innerHTML=`<span class="tag buy">ready${r.venue==='pump'?' · pump.fun':''}</span>`;
+        }
+      }else{
+        if(r.skip_reason){
+          est.textContent="—";min.textContent="—";
+          stat.innerHTML=`<span class="tag skip" title="${r.skip_reason}">skip</span>`;
+        }else{
+          est.textContent=fmt(r.expected_out);min.textContent=fmt(r.min_out);
+          stat.innerHTML=`<span class="tag buy">ready${r.venue==='pump'?' · pump.fun':''}</span>`;
+        }
+      }
+    });
+    toast("Quoted "+j.rows.length+" wallet(s) via Jupiter");
+  }catch(e){toast(e.message,true);}
+  btn.disabled=false;btn.textContent="Preview / quote (no funds moved)";
+}
+
+function solShowConfirm(){
+  const sel=solSelectedIdx();
+  if(MODE.sol==='sell'){
+    $("solConfirmText").innerHTML=`<b>Confirm live sell.</b> This will sell <b>${(+$("solPct").value)}%</b> of the token `
+      +`held by <b>${sel.length}</b> wallet(s) for SOL via Jupiter. Click Confirm to proceed.`;
+  }else{
+    const am=solAmounts();let total=0;sel.forEach(i=>total+=am[i]||0);
+    $("solConfirmText").innerHTML=`<b>Confirm live execution.</b> This will broadcast real Solana transactions spending `
+      +`<b>${total.toFixed(4)} SOL</b> across <b>${sel.length}</b> wallets. Click Confirm to proceed.`;
+  }
+  $("s_execConfirm").classList.remove("hidden");
+  
+}
+function solHideConfirm(){$("s_execConfirm").classList.add("hidden");}
+
+async function solExecute(){
+  const sel=solSelectedIdx();if(!sel.length){toast("Nothing selected",true);return;}
+  const btn=$("s_btnExecGo");btn.disabled=true;btn.innerHTML='<span class="spin"></span>broadcasting';
+  try{
+    const body=MODE.sol==='sell'
+      ? {selected:sel,side:'sell',pct:+$("solPct").value}
+      : {selected:sel,amounts:solAmounts()};
+    Object.assign(body, solExecOpts());
+    const j=await api("/api/sol/execute",body);
+    S_RESULTS=j.results;solHideConfirm();solRenderResults();solStartPolling();
+    const sent=S_RESULTS.filter(r=>r.ok).length;
+    toast(sent+" broadcast, "+(S_RESULTS.length-sent)+" failed");
+    setTimeout(()=>solLoadWallets(), 6000);  // auto-refresh balances after trade
+  }catch(e){toast(e.message,true);}
+  btn.disabled=false;btn.textContent="Broadcast now";
+}
+
+function solRenderResults(){
+  $("s_resultsPanel").classList.remove("hidden");
+  const tb=$("s_resultRows");tb.innerHTML="";
+  S_RESULTS.forEach(r=>{
+    const tr=document.createElement("tr");
+    let txcell="—",stat=`<span class="tag fail" title="${r.error||''}">failed</span>`;
+    if(r.ok&&r.signature){
+      txcell=`<a class="mono" href="https://solscan.io/tx/${r.signature}" target="_blank">${r.signature.slice(0,10)}…${r.signature.slice(-8)}</a>`;
+      stat=`<span class="tag sent s_rc" data-sig="${r.signature}">sent</span>`;
+    }
+    tr.innerHTML=`<td class="muted">${r.index}</td>
+      <td class="mono">${shortAddr(r.pubkey)}</td>
+      <td>${txcell}</td><td>${stat}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+let solPollTimer=null;
+function solStartPolling(){
+  if(solPollTimer)clearInterval(solPollTimer);
+  const sigs=S_RESULTS.filter(r=>r.ok&&r.signature).map(r=>r.signature);
+  if(!sigs.length)return;
+  let ticks=0;
+  solPollTimer=setInterval(async()=>{
+    ticks++;
+    try{
+      const j=await api("/api/sol/status",{signatures:sigs});
+      let allDone=true;
+      sigs.forEach(s=>{
+        const st=j.statuses[s]||{status:"pending"};
+        const el=document.querySelector(`.s_rc[data-sig="${s}"]`);
+        if(!el)return;
+        if(st.status==="confirmed"){el.className="tag confirmed s_rc";el.textContent=(st.level||"confirmed")+(st.slot?" · slot "+st.slot:"");}
+        else if(st.status==="failed"){el.className="tag reverted s_rc";el.textContent="failed";}
+        else{el.className="tag pending s_rc";el.textContent="pending";allDone=false;}
+      });
+      // Stop after everything confirms/fails, or after ~2 min of polling.
+      if(allDone||ticks>40){clearInterval(solPollTimer);solPollTimer=null;}
+    }catch(e){}
+  },3000);
+}
+
+// ===========================================================================
+// TRANSFER (Distribute one→many / Consolidate many→one) — shared for both tabs
+// ===========================================================================
+const XFER={
+  evm:{api:'/api/transfer', explorer:'https://etherscan.io/tx/', unit:'ETH',
+       wallets:()=>WALLETS, addrKey:'address', built:false, statusPoll:'evm'},
+  sol:{api:'/api/sol/transfer', explorer:'https://solscan.io/tx/', unit:'SOL',
+       wallets:()=>S_WALLETS, addrKey:'pubkey', built:false, statusPoll:'sol'},
+};
+let XSTATE={evm:{dir:'distribute',asset:'native',res:[]}, sol:{dir:'distribute',asset:'native',res:[]}};
+
+function xferBuild(tab){
+  const c=XFER[tab], p=tab;
+  const host=$(tab==='evm'?'evmTransferArea':'solTransferArea');
+  if(!c.built){
+    host.innerHTML=`
+      <div class="modebar" style="margin-top:2px">
+        <div class="seg">
+          <button class="seg-btn active" id="${p}XDistBtn" onclick="xferSetDir('${p}','distribute')">Distribute (1→many)</button>
+          <button class="seg-btn" id="${p}XConsBtn" onclick="xferSetDir('${p}','consolidate')">Consolidate (many→1)</button>
+        </div>
+        <div class="seg">
+          <button class="seg-btn active" id="${p}XNatBtn" onclick="xferSetAsset('${p}','native')">Native ${c.unit}</button>
+          <button class="seg-btn" id="${p}XTokBtn" onclick="xferSetAsset('${p}','token')">Token</button>
+        </div>
+      </div>
+      <div class="grid" style="margin-bottom:12px">
+        <div id="${p}XSrcBox"><label>From (source wallet)</label><select id="${p}XSource"></select></div>
+        <div id="${p}XDestBox" class="hidden"><label>To (destination wallet)</label><select id="${p}XDest"></select></div>
+        <div id="${p}XAmtBox"><label>Amount to each (<span id="${p}XAmtUnit">${c.unit}</span>)</label>
+          <input type="number" id="${p}XAmount" value="0.01" step="0.001" min="0"></div>
+      </div>
+      <table>
+        <thead><tr>
+          <th style="width:34px"><input type="checkbox" class="checkbox" id="${p}XSelAll" onchange="xferToggleAll('${p}',this)"></th>
+          <th>#</th><th>Address</th><th id="${p}XBalTh">Balance</th><th>Amount</th><th>Status</th>
+        </tr></thead>
+        <tbody id="${p}XRows"></tbody>
+      </table>
+      <div class="summary"><div id="${p}XSummary" class="muted">Select the wallets to include, then Preview.</div></div>
+      <div class="row-btns">
+        <button class="btn-ghost" onclick="xferPreview('${p}')">Preview (no funds moved)</button>
+        <button class="btn-exec" onclick="xferShowConfirm('${p}')">Execute transfer →</button>
+      </div>
+      <div id="${p}XConfirm" class="hidden" style="background:var(--panel2);border:1px solid var(--warn);border-radius:9px;padding:14px;margin-top:14px">
+        <div id="${p}XConfirmText"></div>
+        <div class="row-btns">
+          <button class="btn-exec" onclick="xferExecute('${p}')">Confirm &amp; broadcast</button>
+          <button class="btn-ghost" onclick="xferHideConfirm('${p}')">Cancel</button>
+        </div>
+      </div>
+      <div id="${p}XResultsPanel" class="hidden" style="margin-top:16px">
+        <h2 style="font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)">Transfer results</h2>
+        <table><thead><tr><th>#</th><th>Address</th><th>Transaction</th><th>Status</th></tr></thead>
+          <tbody id="${p}XResultRows"></tbody></table>
+      </div>`;
+    c.built=true;
+  }
+  xferPopulateWallets(p);
+  xferSetDir(p, XSTATE[tab].dir);
+  xferSetAsset(p, XSTATE[tab].asset);
+}
+
+function xferPopulateWallets(p){
+  const c=XFER[p], ws=c.wallets();
+  const opts=ws.map(w=>`<option value="${w.index}">#${w.index} · ${shortAddr(w[c.addrKey])}</option>`).join("");
+  $(p+"XSource").innerHTML=opts;
+  $(p+"XDest").innerHTML=opts;
+  const tb=$(p+"XRows"); tb.innerHTML="";
+  ws.forEach(w=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td><input type="checkbox" class="checkbox ${p}xsel" data-i="${w.index}" checked></td>
+      <td class="muted">${w.index}</td>
+      <td class="mono addr" title="${w[c.addrKey]}">${shortAddr(w[c.addrKey])}</td>
+      <td class="mono ${p}xbal" data-i="${w.index}">—</td>
+      <td class="mono ${p}xamt" data-i="${w.index}">—</td>
+      <td class="${p}xstat" data-i="${w.index}"></td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function xferSetDir(p,dir){
+  XSTATE[p].dir=dir;
+  $(p+"XDistBtn").classList.toggle('active',dir==='distribute');
+  $(p+"XConsBtn").classList.toggle('active',dir==='consolidate');
+  $(p+"XSrcBox").classList.toggle('hidden',dir!=='distribute');
+  $(p+"XAmtBox").classList.toggle('hidden',dir!=='distribute');
+  $(p+"XDestBox").classList.toggle('hidden',dir!=='consolidate');
+  $(p+"XSummary").textContent = dir==='distribute'
+    ? 'Distribute: sends the amount from the source wallet to each checked wallet.'
+    : 'Consolidate: sweeps each checked wallet’s balance into the destination wallet.';
+}
+function xferSetAsset(p,asset){
+  XSTATE[p].asset=asset;
+  $(p+"XNatBtn").classList.toggle('active',asset==='native');
+  $(p+"XTokBtn").classList.toggle('active',asset==='token');
+  const unit = asset==='native' ? XFER[p].unit : 'tokens';
+  $(p+"XAmtUnit").textContent=unit;
+  $(p+"XBalTh").textContent = asset==='native' ? XFER[p].unit+' balance' : 'Token balance';
+}
+function xferToggleAll(p,cb){document.querySelectorAll(`.${p}xsel`).forEach(el=>el.checked=cb.checked);}
+function xferParticipants(p){return [...document.querySelectorAll(`.${p}xsel:checked`)].map(el=>+el.dataset.i);}
+
+function xferBody(p){
+  const s=XSTATE[p];
+  const body={mode:s.dir, asset:s.asset, participants:xferParticipants(p)};
+  if(s.dir==='distribute'){ body.source=+$(p+"XSource").value; body.amount=+$(p+"XAmount").value; }
+  else { body.dest=+$(p+"XDest").value; }
+  return body;
+}
+
+async function xferPreview(p){
+  try{
+    const j=await api(XFER[p].api+"/preview", xferBody(p));
+    // clear all cells
+    document.querySelectorAll(`.${p}xbal`).forEach(e=>e.textContent="—");
+    document.querySelectorAll(`.${p}xamt`).forEach(e=>e.textContent="—");
+    document.querySelectorAll(`.${p}xstat`).forEach(e=>e.innerHTML="");
+    j.rows.forEach(r=>{
+      const bal=document.querySelector(`.${p}xbal[data-i="${r.index}"]`);
+      const amt=document.querySelector(`.${p}xamt[data-i="${r.index}"]`);
+      const st=document.querySelector(`.${p}xstat[data-i="${r.index}"]`);
+      if(bal&&r.balance!==undefined)bal.textContent=fmt(r.balance);
+      if(amt)amt.textContent=fmt(r.amount||0);
+      if(st)st.innerHTML=r.skip_reason
+        ? `<span class="tag skip" title="${r.skip_reason}">skip</span>`
+        : `<span class="tag buy">${j.mode==='distribute'?'receives':'sends'}</span>`;
+    });
+    let msg="";
+    if(j.mode==='distribute'){
+      const en=j.summary.enough;
+      msg=`source #${j.source.index} holds ${fmt(j.source.balance)} ${j.summary.unit}`
+        +` · sending ${fmt(j.summary.total)} ${j.summary.unit} to ${j.summary.recipients} wallet(s)`
+        +(en?"":` — ⚠ not enough balance`);
+    }else{
+      msg=`consolidating ${j.summary.senders} wallet(s) → #${j.dest.index} (${shortAddr(j.dest[XFER[p].addrKey]||j.dest.address||j.dest.pubkey)})`;
+    }
+    $(p+"XSummary").innerHTML=msg;
+    toast("Transfer preview ready");
+  }catch(e){toast(e.message,true);}
+}
+
+function xferShowConfirm(p){
+  const s=XSTATE[p], unit=s.asset==='native'?XFER[p].unit:'tokens';
+  let txt;
+  if(s.dir==='distribute'){
+    txt=`<b>Confirm distribute.</b> Send <b>${(+$(p+"XAmount").value)} ${unit}</b> from source wallet `
+       +`#${+$(p+"XSource").value} to each checked wallet. Click Confirm to proceed.`;
+  }else{
+    txt=`<b>Confirm consolidate.</b> Sweep <b>${s.asset==='native'?unit:'the token'}</b> from each checked wallet `
+       +`into destination wallet #${+$(p+"XDest").value}. Click Confirm to proceed.`;
+  }
+  $(p+"XConfirmText").innerHTML=txt;
+  $(p+"XConfirm").classList.remove("hidden");
+  
+}
+function xferHideConfirm(p){$(p+"XConfirm").classList.add("hidden");}
+
+async function xferExecute(p){
+  try{
+    const j=await api(XFER[p].api+"/execute", xferBody(p));
+    XSTATE[p].res=j.results; xferHideConfirm(p); xferRenderResults(p); xferPoll(p);
+    const sent=j.results.filter(r=>r.ok).length;
+    toast(sent+" sent, "+(j.results.length-sent)+" failed");
+  }catch(e){toast(e.message,true);}
+}
+
+function xferRenderResults(p){
+  $(p+"XResultsPanel").classList.remove("hidden");
+  const tb=$(p+"XResultRows"); tb.innerHTML="";
+  XSTATE[p].res.forEach(r=>{
+    let txcell="—", stat=`<span class="tag fail" title="${r.error||''}">failed</span>`;
+    const sig=r.tx_hash||r.signature;
+    if(r.ok&&sig){
+      const h=(p==='evm'&&!sig.startsWith("0x"))?"0x"+sig:sig;
+      txcell=`<a class="mono" href="${XFER[p].explorer}${h}" target="_blank">${h.slice(0,10)}…${h.slice(-8)}</a>`;
+      stat=`<span class="tag sent ${p}xrc" data-h="${h}">sent</span>`;
+    }
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td class="muted">${r.index}</td><td class="mono">${shortAddr(r.from||r.address||'')}</td>
+      <td>${txcell}</td><td>${stat}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+function xferPoll(p){
+  const hs=XSTATE[p].res.filter(r=>r.ok).map(r=>{const s=r.tx_hash||r.signature;return (p==='evm'&&!s.startsWith("0x"))?"0x"+s:s;});
+  if(!hs.length)return;
+  let ticks=0;
+  const t=setInterval(async()=>{
+    ticks++;
+    try{
+      let map={};
+      if(p==='evm'){ const j=await api("/api/receipts",{hashes:hs}); map=j.receipts; }
+      else { const j=await api("/api/sol/status",{signatures:hs}); map=j.statuses; }
+      let done=true;
+      hs.forEach(h=>{
+        const st=map[h]||{status:"pending"};
+        const el=document.querySelector(`.${p}xrc[data-h="${h}"]`); if(!el)return;
+        if(st.status==="confirmed"){el.className=`tag confirmed ${p}xrc`;el.textContent="confirmed"+(st.block?" · blk "+st.block:st.slot?" · slot "+st.slot:"");}
+        else if(st.status==="reverted"||st.status==="failed"){el.className=`tag reverted ${p}xrc`;el.textContent=st.status;}
+        else{el.className=`tag pending ${p}xrc`;el.textContent="pending";done=false;}
+      });
+      if(done||ticks>40){clearInterval(t);}
+    }catch(e){}
+  },3500);
+}
+
+// ===========================================================================
+// GENERATE WALLET
+// ===========================================================================
+async function genWallet(tab){
+  const keysPath = tab==='evm' ? $("keys_path").value : $("s_keys_path").value;
+  try{
+    const j=await api(tab==='evm'?"/api/generate":"/api/sol/generate",
+                      {count:1, append:true, keys_path:keysPath});
+    const w=j.wallets[0];
+    showGen(tab, w, j.appended, j.keys_path);
+    // refresh wallet lists if connected so the new one appears
+    if(tab==='evm' && CONNECTED) await loadWallets();
+    if(tab==='sol' && S_WALLETS.length) await solLoadWallets();
+    if(MODE[tab]==='transfer') xferPopulateWallets(tab);
+  }catch(e){toast(e.message,true);}
+}
+function showGen(tab, w, appended, path){
+  $("genAddr").textContent=w.address;
+  $("genKey").textContent=w.private_key;
+  $("genNote").textContent=appended?`Appended to ${path} on this machine.`:`NOT saved to a file.`;
+  $("genModal").style.display="flex";
+}
+function hideGen(){$("genModal").style.display="none";}
+function copyGenKey(){navigator.clipboard&&navigator.clipboard.writeText($("genKey").textContent);toast("Private key copied");}
+
+// ===========================================================================
+// LIVE PRICE / POSITION
+// ===========================================================================
+let pricePoll=null, balPoll=null, LAST_PRICE=null;
+function fmtUsd(n){ if(n==null)return "—"; n=+n;
+  if(n>=1e9)return "$"+(n/1e9).toFixed(2)+"B";
+  if(n>=1e6)return "$"+(n/1e6).toFixed(2)+"M";
+  if(n>=1e3)return "$"+(n/1e3).toFixed(1)+"K";
+  return "$"+n.toFixed(2); }
+function fmtPrice(n){ if(n==null)return "—"; n=+n;
+  return n>=1 ? "$"+n.toFixed(4) : "$"+n.toPrecision(4); }
+
+function updatePosition(){
+  if(!LAST_PRICE||LAST_PRICE.price_usd==null){$("pbPos").textContent="—";return;}
+  const held=S_WALLETS.reduce((s,w)=>s+(w.token_balance||0),0);
+  $("pbPos").textContent=fmtUsd(held*LAST_PRICE.price_usd);
+}
+async function refreshPrice(){
+  try{
+    const j=await api("/api/sol/price",{});
+    const p=j.price; LAST_PRICE=p;
+    if(!p){ $("pbPrice").textContent="no pair"; $("pbUpdated").textContent="not on Dexscreener yet"; return; }
+    $("pbPrice").textContent=fmtPrice(p.price_usd);
+    const ch=p.change_24h;
+    $("pbChange").textContent=(ch!=null)?(ch>=0?"+":"")+(+ch).toFixed(1)+"%":"—";
+    $("pbChange").style.color=(ch==null)?"var(--txt)":(ch>=0?"var(--ok)":"var(--danger)");
+    $("pbMcap").textContent=fmtUsd(p.market_cap);
+    $("pbLiq").textContent=fmtUsd(p.liquidity_usd);
+    $("pbVol").textContent=fmtUsd(p.volume_24h);
+    updatePosition();
+    $("pbUpdated").textContent="live · "+new Date().toLocaleTimeString();
+    // wire the chart once we know the pair
+    if(p.chart_url && $("chartFrame").dataset.url!==p.chart_url){
+      $("chartFrame").dataset.url=p.chart_url;
+      if(!$("chartPanel").classList.contains("hidden")) $("chartFrame").src=p.chart_url;
+    }
+  }catch(e){}
+}
+function toggleChart(){
+  const panel=$("chartPanel"); panel.classList.toggle("hidden");
+  const url=$("chartFrame").dataset.url;
+  if(!panel.classList.contains("hidden") && url && $("chartFrame").src!==url) $("chartFrame").src=url;
+}
+
+// Soft balance refresh: update numbers in place, keep selections/quotes intact.
+async function solSoftRefresh(){
+  if(!$("autoRefresh").checked) return;
+  if(MODE.sol==='transfer') return;            // don't disturb transfer flow
+  try{
+    const j=await api("/api/sol/wallets");
+    S_WALLETS=j.wallets||S_WALLETS;
+    const sell=MODE.sol==='sell';
+    S_WALLETS.forEach(w=>{
+      if(sell){ const el=document.querySelector(`.s_tokbal[data-i="${w.index}"]`);
+        if(el && w.token_balance!=null) el.textContent=fmt(w.token_balance); }
+      else { const el=document.querySelector(`.s_solbal[data-i="${w.index}"]`);
+        if(el && w.sol!=null) el.textContent=w.sol.toFixed(5); }
+    });
+    updatePosition();
+  }catch(e){}
+}
+
+function startPricePolling(){
+  $("solPriceBar").classList.remove("hidden");
+  refreshPrice(); refreshSafety();
+  if(pricePoll)clearInterval(pricePoll);
+  pricePoll=setInterval(()=>{refreshPrice();refreshSafety();}, 5000);   // ~live
+  if(balPoll)clearInterval(balPoll);
+  balPoll=setInterval(solSoftRefresh, 20000);     // balances every 20s
+}
+
+// ===========================================================================
+// SELECT WITH BALANCE
+// ===========================================================================
+function solSelectWithBalance(){
+  const sell=MODE.sol==='sell';
+  S_WALLETS.forEach(w=>{
+    const has = sell ? (w.token_balance||0)>0 : (w.sol||0)>0.001;
+    const cb=document.querySelector(`.s_rowsel[data-i="${w.index}"]`);
+    if(cb)cb.checked=has;
+  });
+  solRecompute();
+}
+
+// ===========================================================================
+// CONFIG PERSISTENCE
+// ===========================================================================
+function currentSavableConfig(){
+  return {
+    s_rpc_url:$("s_rpc_url").value, s_token_mint:$("s_token_mint").value,
+    s_keys_path:$("s_keys_path").value, s_amount_sol:$("s_amount_sol").value,
+    s_slippage_pct:$("s_slippage_pct").value, s_sol_reserve:$("s_sol_reserve").value,
+    s_route:$("s_route").value, s_priority_fee:$("s_priority_fee").value,
+    s_jito:$("s_jito").checked, s_jito_tip:$("s_jito_tip").value,
+    s_jitter_delay:$("s_jitter_delay").value, s_jitter_amount:$("s_jitter_amount").value,
+    s_jupiter_base_url:$("s_jupiter_base_url").value,
+    // EVM side (no secrets)
+    network:$("network").value, token_address:$("token_address").value,
+    keys_path:$("keys_path").value, amount_eth:$("amount_eth").value,
+    slippage_pct:$("slippage_pct").value,
+  };
+}
+async function saveConfig(){ try{ await api("/api/config/save", currentSavableConfig()); }catch(e){} }
+async function loadSavedConfig(){
+  try{
+    const j=await api("/api/config/load");
+    if(!j.config)return;
+    const c=j.config;
+    for(const k in c){ const el=$(k); if(!el)continue;
+      if(el.type==='checkbox')el.checked=!!c[k]; else el.value=c[k]; }
+    if(c.network)applyNetwork();
+  }catch(e){}
+}
+
+// ===========================================================================
+// DCA
+// ===========================================================================
+let dcaPoll=null;
+async function dcaStart(){
+  const sel=solSelectedIdx();
+  if(!sel.length){toast("Select wallets to DCA into",true);return;}
+  try{
+    await api("/api/sol/dca/start",{amount:+$("dcaAmount").value, interval_min:+$("dcaInterval").value,
+      count:+$("dcaCount").value, selected:sel, route:$("s_route").value, jito_enabled:$("s_jito").checked});
+    toast("DCA started"); dcaPollStatus();
+  }catch(e){toast(e.message,true);}
+}
+async function dcaStop(){ try{ await api("/api/sol/dca/stop",{}); toast("DCA stopped"); }catch(e){} }
+async function dcaPollStatus(){
+  if(dcaPoll)clearInterval(dcaPoll);
+  const upd=async()=>{ try{ const j=await api("/api/sol/dca/status");
+    let s = j.active ? `running — ${j.done}/${j.count} done` : (j.done?`finished — ${j.done}/${j.count}`:"idle");
+    if(j.active&&j.next_in!=null)s+=` · next in ${j.next_in}s`;
+    if(j.log&&j.log.length)s+=" · last: "+(j.log[0].error?("err "+j.log[0].error):(j.log[0].ok+"/"+j.log[0].n+" ok"));
+    $("dcaStatus").textContent=s;
+    if(!j.active)clearInterval(dcaPoll);
+  }catch(e){} };
+  upd(); dcaPoll=setInterval(upd,3000);
+}
+
+// ===========================================================================
+// AUTO-SELL
+// ===========================================================================
+let asPoll=null;
+async function autosellArm(){
+  const sel=solSelectedIdx();
+  if(!sel.length){toast("Select wallets to auto-sell",true);return;}
+  const rungs=[];
+  const add=(t,v,pc)=>{ if((+v)>0) rungs.push({type:t, value:+v, pct:+pc}); };
+  add($("as1type").value, $("as1val").value, $("as1pct").value);
+  add($("as2type").value, $("as2val").value, $("as2pct").value);
+  add("sl", $("asSlVal").value, $("asSlPct").value);
+  const trail=+$("asTrail").value||0;
+  if(!rungs.length && trail<=0){toast("Set at least one target or a trailing stop",true);return;}
+  try{
+    await api("/api/sol/autosell/arm",{rungs, trail_pct:trail, selected:sel});
+    toast("Auto-sell armed"); asPollStatus();
+  }catch(e){toast(e.message,true);}
+}
+async function autosellDisarm(){ try{ await api("/api/sol/autosell/disarm",{}); toast("Auto-sell disarmed"); asPollStatus(); }catch(e){} }
+async function asPollStatus(){
+  if(asPoll)clearInterval(asPoll);
+  const upd=async()=>{ try{ const j=await api("/api/sol/autosell/status");
+    let s;
+    const px=j.last_price?fmtPrice(j.last_price.price_usd):"—";
+    const pk=j.peak!=null?fmtPrice(j.peak):"—";
+    const fired=(j.fired||[]).map(x=>x.error?(x.tag+" err"):(x.tag+" "+x.pct+"% ("+x.ok+"/"+x.n+")")).join(", ");
+    if(j.active){ s=`armed — price ${px}, peak ${pk}`+(fired?` · fired: ${fired}`:""); }
+    else if(j.triggered){ s=`done`+(fired?` — fired: ${fired}`:""); clearInterval(asPoll); }
+    else s="disarmed"+(fired?` — fired: ${fired}`:"");
+    $("asStatus").textContent=s;
+  }catch(e){} };
+  upd(); asPoll=setInterval(upd,5000);
+}
+
+// ===========================================================================
+// SAFETY: kill switch + spend cap
+// ===========================================================================
+async function panicStop(){
+  try{ await api("/api/sol/panic",{}); toast("STOPPED — all automation halted",true);
+    if(dcaPoll){dcaPollStatus();} if(asPoll){asPollStatus();} refreshSafety();
+  }catch(e){toast(e.message,true);}
+}
+async function resumeTrading(){ try{ await api("/api/sol/resume",{}); refreshSafety(); }catch(e){} }
+async function setSpendCap(){
+  try{ const j=await api("/api/sol/spendcap",{cap:+$("spendCap").value}); paintSafety(j); }catch(e){}
+}
+async function resetSpent(){ try{ const j=await api("/api/sol/spendcap",{reset:true}); paintSafety(j); toast("Spend counter reset"); }catch(e){} }
+async function refreshSafety(){ try{ const j=await api("/api/sol/safety"); paintSafety(j); }catch(e){} }
+function paintSafety(j){
+  $("spentLabel").textContent="spent "+(j.spent||0).toFixed(3)+(j.cap?(" / "+j.cap):"");
+  const halted=j.halted;
+  $("haltState").textContent = halted ? "HALTED — buys blocked" : "";
+  $("haltState").style.color = halted ? "var(--danger)" : "var(--muted)";
+  $("panicBtn").textContent = halted ? "▶ Resume" : "■ STOP ALL";
+  $("panicBtn").style.background = halted ? "var(--accent2)" : "var(--danger)";
+  $("panicBtn").onclick = halted ? resumeTrading : panicStop;
+}
+
+function toggleBotPanel(){ $("botPanel").classList.toggle("hidden"); }
+
+// Populate the Robinhood Chain addresses into the advanced fields on load.
+applyNetwork();
+loadSavedConfig();
+vaultBoot();   // show the unlock / create-password gate
+
+// Keep default-amount edits reflected in the per-row inputs before quoting.
+$("amount_eth").addEventListener("change",()=>{
+  document.querySelectorAll(".amt-input:not(.s_amt)").forEach(el=>el.value=(+$("amount_eth").value).toFixed(3));
+  recompute();
+});
+$("s_amount_sol").addEventListener("change",()=>{
+  document.querySelectorAll(".s_amt").forEach(el=>el.value=(+$("s_amount_sol").value).toFixed(3));
+  solRecompute();
+});
+</script>
+</body>
+</html>

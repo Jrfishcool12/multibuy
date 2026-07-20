@@ -1,0 +1,48 @@
+# ---------------------------------------------------------------------------
+# multibuy configuration (Ethereum mainnet, spend native ETH)
+# Copy this to config.yaml and edit. config.yaml is gitignored.
+# ---------------------------------------------------------------------------
+
+# JSON-RPC endpoint for Ethereum mainnet.
+# Use your own Alchemy/Infra/QuickNode URL for reliability. A public one works
+# for testing but may rate-limit when several wallets fire at once.
+rpc_url: "https://eth.llamarpc.com"
+
+# The ERC-20 token you want to BUY (checksummed or lowercase both fine).
+token_address: "0x0000000000000000000000000000000000000000"
+
+# How much native ETH each wallet spends by default.
+amount_eth: 0.02
+
+# Optional: override the amount for specific wallets, keyed by their 0-based
+# index in keys.txt. Anything not listed uses amount_eth above.
+# amount_overrides:
+#   0: 0.05
+#   2: 0.01
+
+# Slippage tolerance in basis points (100 = 1.00%). The swap reverts on-chain
+# if you'd receive less than quote * (1 - slippage). Lower = safer price,
+# higher = more likely to fill on volatile / low-liquidity tokens.
+slippage_bps: 100
+
+# Keep this much ETH untouched in each wallet for future gas. A buy is skipped
+# if (balance - gas_reserve_eth) is less than the wallet's amount_eth.
+gas_reserve_eth: 0.005
+
+# Seconds from send until the swap deadline; after this the tx will revert
+# rather than execute at a stale price.
+deadline_seconds: 300
+
+# Uniswap V3 fee tiers (in hundredths of a bip) to quote across. The tool
+# picks whichever pool gives the most tokens out. 500=0.05%, 3000=0.30%,
+# 10000=1.00%. Most tokens live in 3000 or 10000.
+fee_tiers: [500, 3000, 10000]
+
+# Hard ceiling on gas price (gwei). A buy is skipped if the network base fee
+# would push above this, so a gas spike can't silently drain ETH.
+max_gas_price_gwei: 50
+
+# --- Contract addresses (Ethereum mainnet defaults; normally leave as-is) ---
+weth_address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
+swap_router_address: "0x68b3465833fb72A70ecDF485E0e4C7bD8665Fc45"   # Uniswap SwapRouter02
+quoter_address: "0x61fFE014bA17989E743c5F6cB21bF9697530B21e"        # Uniswap QuoterV2

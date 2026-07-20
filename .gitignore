@@ -1,0 +1,28 @@
+# ---------------------------------------------------------------------------
+# NEVER commit real private keys, wallet files, or an encrypted vault.
+# Only the *.example.* templates belong in the repo.
+# ---------------------------------------------------------------------------
+keys.txt
+solana_keys.txt
+*.vault
+vault.json
+config.yaml
+config.yml
+*.log
+trades.csv
+results.csv
+
+# Build output
+build/
+dist/
+*.spec
+__pycache__/
+*.pyc
+
+# Local / editor
+venv/
+.venv/
+.env
+.DS_Store
+.idea/
+.vscode/

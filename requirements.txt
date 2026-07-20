@@ -1,0 +1,17 @@
+# EVM (Ethereum / Robinhood Chain)
+web3>=6,<8
+PyYAML>=6
+cryptography>=41
+Flask>=3
+
+# Solana (only needed for the Solana tab)
+solders>=0.21
+solana>=0.34
+base58>=2
+requests>=2
+certifi>=2023
+
+# Desktop app (optional — only needed to run/build the native window)
+# pip install pywebview pyinstaller
+# pywebview>=5
+# pyinstaller>=6

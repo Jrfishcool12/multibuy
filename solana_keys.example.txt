@@ -1,0 +1,12 @@
+# Solana wallet keys — ONE per line. Copy to solana_keys.txt (gitignored).
+# Two formats are accepted:
+#
+#   1. base58 secret key — what Phantom / Solflare give you under
+#      "Export Private Key". Looks like a long base58 string:
+#      4wBqpZM9...big-base58-blob...xY7
+#
+#   2. JSON array of 64 numbers — what `solana-keygen` writes to a *.json
+#      keypair file. Paste the whole array on one line:
+#      [12,34,56, ... ,201,4]
+#
+# Blank lines and lines starting with # are ignored.
